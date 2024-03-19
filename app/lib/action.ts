@@ -3,6 +3,7 @@
 import dayjs from "dayjs";
 import { Task } from "./definitions";
 import { addToDb, fetchCategories } from "./script";
+import { fixedCategories } from "./utils";
 
 
 export async function createTask(task: Task) {
@@ -14,5 +15,6 @@ export async function createTask(task: Task) {
 }
 
 export async function categories(){
-    return  await fetchCategories();
+    const newCategories = await fetchCategories();
+    return [...fixedCategories, ...newCategories];
 }

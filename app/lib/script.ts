@@ -25,7 +25,6 @@ export async function addToDb(task: Task) {
 }
 
 export async function fetchTasks() {
-  noStore();
   try {
     const tasks = await sql`SELECT * FROM tasks  ORDER BY Date ASC`;
     console.log("Fetched Tasks: ", tasks.rows);
@@ -40,13 +39,48 @@ export async function fetchTasks() {
 
 export async function fetchCategories() {
   try {
-    const result =
-      await sql`SELECT DISTINCT Category FROM tasks WHERE Category NOT IN ('Home', 'Personal', 'Work', 'Sport', 'Grocery', 'Other');
-      `;
-      const categories = result.rows.map(row => row.Category);
+    const result = await sql`SELECT DISTINCT Category, COUNT(*) as NumberOfTasks FROM tasks GROUP BY Category ORDER BY NumberOfTasks DESC`;
+    console.log("Result: ", result);
+    
+      const categories = result.rows.map(row =>{
+        return { 
+          name: row.category, 
+          numbers: row.numberoftasks
+        };
+      });
+      console.log("Categories: ", categories);
+      
       return categories; 
      } catch (error) {
     console.log("Error fetching categories", error);
     throw new Error("Error fetching Categories");
+  }
+}
+
+
+export async function deleteTaskFromDb(id: number){
+  try{
+    await sql`DELETE FROM tasks where  id=${id}`;
+  }catch(error){
+    console.log("Error while trying to delete  task from db: ", error);
+    throw new Error("Error while  deleting the task.");
+  }
+}
+
+export async function addDetailsToDb(id: number, details: string){
+  try{
+    await sql`UPDATE tasks SET details = ${details} WHERE id= ${id};`;
+  }catch(error){
+    console.log("Error adding Details to task ", error);
+    throw new Error("There was an error adding the details to this task.");
+  }
+}
+
+export async function taskCompleted(id: number){
+  try{
+    await sql`UPDATE tasks SET status = 'Done' WHERE id = ${id};`;
+  }catch(error){
+    console.log("Error while ending task", error);
+    throw new Error("We could not end this task.");
   }
 }

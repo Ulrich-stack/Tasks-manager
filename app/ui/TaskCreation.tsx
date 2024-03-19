@@ -7,16 +7,30 @@ import TimePickerComp from "./TimePickerComp";
 import DatePickerComp from "./DatePickerComp";
 import PeriodPickerComp from "./TimePickerComp";
 import dayjs, { Dayjs } from "dayjs";
-import { categories, hasEmptyFields } from "../lib/utils";
+import {
+  fixedCategories,
+  hasEmptyFields,
+  categories,
+  hasIcon,
+  iconIndex,
+  stringToColor,
+} from "../lib/utils";
 import { createTask } from "../lib/action";
+import { fetchCategories } from "../lib/script";
 
-function FloatingButton() {
+function TaskCreation({ reloadData }: { reloadData: any }) {
   const [isOverlayVisible, setIsOverlayVisible] = useState(false);
   const [categoryClicked, setCategoryClicked] = useState("");
-  const [hourFrom, setHourFrom] = useState<Date | null>(null);
-  const [hourTo, setHourTo] = useState<Date | null>(null);
+  const [hourFrom, setHourFrom] = useState<Dayjs | null>(null);
+  const [hourTo, setHourTo] = useState<Dayjs | null>(null);
   const [date, setDate] = useState<Dayjs | null>(dayjs());
   const [showWarningText, setShowWarningText] = useState(false);
+  const [allCategories, setAllCategories] = useState([
+    {
+      name: "",
+      numbers: "",
+    },
+  ]);
 
   const [newTask, setNewTask] = useState({
     name: "",
@@ -26,11 +40,26 @@ function FloatingButton() {
     hourfrom: "",
     hourto: "",
   });
-  
+
+  useEffect(() => {
+    async function loadCategories() {
+      try {
+        const newCategories = await fetchCategories();
+        console.log(newCategories);
+
+        setAllCategories(newCategories);
+      } catch (error) {
+        console.error("Failed to fetch categories:", error);
+      }
+    }
+
+    loadCategories();
+  }, []);
 
   const toggleOverlay = () => {
     const isVisible = isOverlayVisible;
     console.log(isVisible);
+    console.log(allCategories);
 
     setIsOverlayVisible(!isVisible);
   };
@@ -55,6 +84,7 @@ function FloatingButton() {
 
     if (!hasEmptyFields(temp)) {
       createTask(temp);
+      reloadData(); // Fetch the database for change once we add a task and change the taskList Array of the parent component
 
       temp = {
         name: "",
@@ -74,10 +104,10 @@ function FloatingButton() {
   }
 
   return (
-    <div className="relative w-full flex justify-center">
-      <div className="w-1/5  bg-transparent fixed flex flex-col justify-end z-10 bottom-10">
+    <div className="relative w-full flex justify-center max-h-[600px]">
+      <div className="w-2/6 max-h-[400px] bg-transparent fixed flex flex-col justify-end z-10 bottom-10">
         <div
-          className={`h-full bg-white mb-3 rounded-lg drop-shadow-xl p-2 ${
+          className={`max-h-full bg-white mb-3 rounded-lg drop-shadow-xl p-2 ${
             !isOverlayVisible && "hidden"
           }`}
         >
@@ -95,8 +125,8 @@ function FloatingButton() {
               placeholder="New task"
               onChange={(e) => setNewTask({ ...newTask, name: e.target.value })}
             ></input>
-            <div className="flex flex-col gap-y-1 mt-2">
-              {categories.map((category, index) => {
+            <div className="flex flex-col gap-y-1 mt-2 overflow-y-auto max-h-[500px]">
+              {allCategories.map((category) => {
                 return (
                   <div
                     key={category.name}
@@ -106,15 +136,23 @@ function FloatingButton() {
                     }`}
                   >
                     <div className="flex items-center gap-1">
-                      <img
-                        src={`/icons/${category.icon}`}
-                        className="w-5"
-                        alt="home"
-                      />
-                      <span>{category.name}</span>
+                      {hasIcon(category.name) ? (
+                        <img
+                          src={`/icons/${
+                            categories[iconIndex(category.name)].icon
+                          }`}
+                          className="w-5 ml-2"
+                        ></img>
+                      ) : (
+                        <div
+                          className={`ml-3 w-4 h-4 border rounded-md`}
+                          style={{ borderColor: stringToColor(category.name) }}
+                        ></div>
+                      )}
+                      <span className="ml-1">{category.name}</span>
                     </div>
                     <div className="bg-gray-100 rounded-full w-4 font-light text-gray-500 flex items-center justify-center">
-                      2
+                      {category.numbers}
                     </div>
                   </div>
                 );
@@ -159,4 +197,4 @@ function FloatingButton() {
   );
 }
 
-export default FloatingButton;
+export default TaskCreation;
