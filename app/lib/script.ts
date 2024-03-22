@@ -27,7 +27,7 @@ export async function addToDb(task: Task) {
 export async function fetchTodayTasks() {
   try {
     const tasks =
-      await sql`SELECT * FROM tasks WHERE date = CURRENT_DATE ORDER BY TO_TIMESTAMP(hourfrom, 'HH24-MI') ASC;`;
+      await sql`SELECT * FROM tasks WHERE date = CURRENT_DATE AND status = 'Pending' ORDER BY TO_TIMESTAMP(hourfrom, 'HH24-MI') ASC;`;
     return tasks.rows;
   } catch (error) {
     console.log("Error fetching database for tasks: ", error);
@@ -40,6 +40,7 @@ export async function fetch3NextDays() {
     const results = await sql`SELECT * FROM tasks
     WHERE date >= CURRENT_DATE
     AND date < CURRENT_DATE + INTERVAL '4 days'
+    AND status = 'Pending'
     ORDER BY TO_TIMESTAMP(hourfrom, 'HH24-MI') ASC;`;
 
     const tasksByDay: QueryResultRow[][] = [[], [], []];
