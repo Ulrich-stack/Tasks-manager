@@ -1,11 +1,16 @@
 "use client";
 
-  import Taskslist from "../ui/Taskslist";
-  import { fetchTasks } from "../lib/script";
-  import {useEffect, useState } from "react";
-  import ButtonTask from "../ui/ButtonTask";
-  import { QueryResultRow } from "@vercel/postgres";
-  import TaskCreation from "../ui/TaskCreation";
+import Taskslist from "../ui/Taskslist";
+import { fetch3NextDays, fetchTodayTasks } from "../lib/script";
+import { useEffect, useState } from "react";
+import { QueryResultRow } from "@vercel/postgres";
+import TaskCreation from "../ui/TaskCreation";
+import { LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs, { Dayjs } from "dayjs";
+import { Grid, MenuItem, TextField } from "@mui/material";
+import { TextfieldStyle } from "../lib/utils";
+import NothingToDo from "../ui/components/NothingToDo";
 
 export default function Home() {
   const [tasksList, setTasklist] = useState<QueryResultRow[]>([]);
