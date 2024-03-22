@@ -13,6 +13,12 @@ const config: Config = {
         "gradient-conic":
           "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
       },
+      animation: {
+        'rotate': 'rotateAnimation 2s linear',
+      },
+      transformOrigin: {
+        'bottom-right': 'bottom right',
+      },
     },
   },
   plugins: [],

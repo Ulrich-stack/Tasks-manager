@@ -68,21 +68,27 @@ export default function EditTask({
           sx={{ p: 2, display: "flex", flexDirection: "column", gap: 2 }}
         >
           <button className="text-xs flex items-center gap-x-2"
-          onClick={e=>handleOpenModal()}
+          onClick={e=>{
+            handleOpenModal();
+            setAnchorEl(null);
+          }}
           >
             <PencilIcon width={"14px"} />
             <span>Edit</span>
           </button>
           <button
             className="text-xs flex items-center gap-x-2"
-            onClick={(e) => endTask(task.id)}
+            onClick={(e) => {
+              endTask(task.id);
+              setAnchorEl(null);
+            }}
           >
             <CheckCircleIcon width={"14px"} />
             <span>Completed</span>
           </button>
         </Typography>
       </Popover>
-      <UpdateTask task={task} open={openModal} onClose={handleCloseModal}  />
+      <UpdateTask task={task} open={openModal} onClose={handleCloseModal} reloadData={reloadData} />
     </div>
   );
 }

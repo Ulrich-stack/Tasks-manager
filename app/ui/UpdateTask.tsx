@@ -1,13 +1,15 @@
 import * as React from "react";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import Typography from "@mui/material/Typography";
 import Modal from "@mui/material/Modal";
-import { DatePicker } from "@mui/x-date-pickers";
 import { useState } from "react";
 import dayjs, { Dayjs } from "dayjs";
-import DatePickerComp from "./DatePickerComp";
-import { TextField } from "@mui/material";
+import DatePickerComp from "./components/DatePickerComp";
+import { MenuItem, Select, TextField } from "@mui/material";
+import { TextfieldStyle } from "../lib/utils";
+import TimePickerComp from "./components/TimePickerComp";
+import { Textarea } from "@mui/joy";
+import { fetchCategories, updateTask } from "../lib/script";
+import { log } from "console";
 
 const style = {
   position: "absolute" as "absolute",
@@ -24,13 +26,60 @@ export default function UpdateTask({
   task,
   open,
   onClose,
+  reloadData
 }: {
   task: any;
   open: boolean;
   onClose: () => void;
+  reloadData: ()=> void
 }) {
-
   const [date, setDate] = useState<Dayjs | null>(dayjs(task.date));
+  const [hourFrom, setHourFrom] = useState<Dayjs | null>(
+    dayjs(task.hourfrom, "HH:mm")
+  );
+  const [hourTo, setHourTo] = useState<Dayjs | null>(
+    dayjs(task.hourTo, "HH:mm")
+  );
+  const [details, setDetails] = useState<string>(task.details);
+  const [category, setCategory] = useState<string>(task.category);
+  const [allCategories, setAllCategories] = useState([
+    {
+      name: "",
+      numbers: "",
+    },
+  ]);
+
+  React.useEffect(() => {
+    async function loadCategories() {
+      try {
+        const newCategories = await fetchCategories();
+        console.log(newCategories);
+
+        setAllCategories(newCategories);
+      } catch (error) {
+        console.error("Failed to fetch categories:", error);
+      }
+    }
+
+    loadCategories();
+  }, []);
+
+  async function update(e: React.FormEvent) {
+    onClose();
+
+    e.preventDefault();
+    const formData = new FormData(e.target as HTMLFormElement);
+    const formObject = Object.fromEntries(formData.entries());
+    try{
+      await updateTask(task.id, formObject);
+      console.log("Update with success: ", task.id);
+    }catch(error){
+      console.log("Update failed", error);
+      throw new Error("We could not update this task");
+    }  
+    reloadData();
+    console.log("Update", formObject);
+  }
 
   return (
     <div>
@@ -45,19 +94,65 @@ export default function UpdateTask({
             <h1 className="font-bold">Edit task</h1>
           </div>
           <div className="text-xs">
-            <form className="" action="">
+            <form className="" onSubmit={update}>
               <div className="flex flex-col gap-y-2">
-                <label htmlFor="taskName" className="font-semibold">Task name</label>
+                <label className="font-semibold">Task name</label>
                 {/* <input className="border p-2 rounded-lg" name="taskName" id="taskName" value={task.name}></input> */}
-                <TextField size="small"
-                                
-                  />
+                <TextField
+                  name="taskName"
+                  size="small"
+                  sx={TextfieldStyle}
+                  defaultValue={task.name}
+                />
+              </div>
+              <div className="flex flex-col gap-y-2 mt-4">
+                <label className="font-semibold">Category</label>
+                <TextField
+                select
+                name="category"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                sx={TextfieldStyle}
+                size="small"
+                >
+                   {allCategories.map((category) => {
+                    return (
+                      <MenuItem key={"select " + category.name} value={category.name}>{category.name}</MenuItem>
+                    );
+                  })}
+                  </TextField>
               </div>
               <div className="flex flex-col gap-y-2 mt-2">
-                <label htmlFor="taskDate" className="font-semibold">Date</label>
-                {/* <input className="border p-2 rounded-lg" name="taskDate" id="taskDate" value={task.name}></input> */}
-                <DatePickerComp value={date} setDate={setDate }/>
+                <DatePickerComp
+                  name="date"
+                  value={date}
+                  setDate={setDate}
+                />
+                <TimePickerComp
+                  nameFrom="hourFrom"
+                  nameTo="hourTo"
+                  hourTo={hourTo}
+                  hourFrom={hourFrom}
+                  setHourFrom={setHourFrom}
+                  setHourTo={setHourTo}
+                />
               </div>
+              <div className="w-full flex flex-col mt-4 gap-y-2">
+                <label className="font-semibold">Description</label>
+                <Textarea
+                  minRows={4}
+                  name="details"
+                  sx={TextfieldStyle}
+                  defaultValue={task.details}
+                  onChange={(e) => setDetails(e.target.value)}
+                />
+              </div>
+              <button
+                type="submit"
+                className="w-full bg-black text-white p-2 rounded-lg mt-4"
+              >
+                Update
+              </button>
             </form>
           </div>
         </Box>

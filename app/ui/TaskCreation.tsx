@@ -3,19 +3,19 @@
 import { PlusIcon } from "@heroicons/react/24/outline";
 import { TimePicker } from "@mui/x-date-pickers";
 import { useEffect, useState } from "react";
-import TimePickerComp from "./TimePickerComp";
-import DatePickerComp from "./DatePickerComp";
-import PeriodPickerComp from "./TimePickerComp";
+import TimePickerComp from "./components/TimePickerComp";
+import DatePickerComp from "./components/DatePickerComp";
+import PeriodPickerComp from "./components/TimePickerComp";
 import dayjs, { Dayjs } from "dayjs";
 import {
   fixedCategories,
   hasEmptyFields,
-  categories,
   hasIcon,
   iconIndex,
   stringToColor,
 } from "../lib/utils";
-import { createTask } from "../lib/action";
+import { categories } from "../lib/categories";
+import { createTask } from "../lib/utils";
 import { fetchCategories } from "../lib/script";
 
 function TaskCreation({ reloadData }: { reloadData: any }) {
@@ -54,7 +54,7 @@ function TaskCreation({ reloadData }: { reloadData: any }) {
     }
 
     loadCategories();
-  }, []);
+  }, [isOverlayVisible]);
 
   const toggleOverlay = () => {
     const isVisible = isOverlayVisible;
@@ -105,7 +105,7 @@ function TaskCreation({ reloadData }: { reloadData: any }) {
 
   return (
     <div className="relative w-full flex justify-center max-h-[600px]">
-      <div className="w-2/6 max-h-[400px] bg-transparent fixed flex flex-col justify-end z-10 bottom-10">
+      <div className="w-1/4 max-h-[400px] bg-transparent fixed flex flex-col justify-end z-10 bottom-10">
         <div
           className={`max-h-full bg-white mb-3 rounded-lg drop-shadow-xl p-2 ${
             !isOverlayVisible && "hidden"
@@ -163,16 +163,16 @@ function TaskCreation({ reloadData }: { reloadData: any }) {
                 placeholder="Create a new category"
                 onChange={(e) => handleCategory(e, e.target.value)}
               ></input>
+                <DatePickerComp name="date" value={date} setDate={setDate} />
               <div className="flex gap-x-2 mt-2">
                 <PeriodPickerComp
                   hourFrom={hourFrom}
                   setHourFrom={setHourFrom}
                   hourTo={hourTo}
                   setHourTo={setHourTo}
+                  nameFrom=""
+                  nameTo=""
                 />
-              </div>
-              <div className="mt-2 w-full">
-                <DatePickerComp value={date} setDate={setDate} />
               </div>
               <button
                 className="w-full bg-black text-white p-2 mt-2 rounded-lg"
