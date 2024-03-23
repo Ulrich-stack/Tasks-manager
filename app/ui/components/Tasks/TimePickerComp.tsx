@@ -3,7 +3,7 @@ import { LocalizationProvider, TimePicker } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { TextField, styled } from '@mui/material';
 import { Dayjs } from 'dayjs';
-import { TextfieldStyle } from '../../lib/utils';
+import { TextfieldStyle } from '../../../lib/utils';
 
 
 
@@ -21,7 +21,7 @@ const PeriodPickerComp: React.FC<PeriodPickerCompProps> = ({ hourFrom, setHourFr
   return (
     <div className="flex gap-x-2 mt-2">
     <div className='w-1/2 flex flex-col gap-y-2'>
-      <span className='ml-1 font-semibold'>From</span>
+      <span className='ml-1 font-semibold'>Start</span>
     <TimePicker
         name={nameFrom}
         label=""
@@ -33,7 +33,7 @@ const PeriodPickerComp: React.FC<PeriodPickerCompProps> = ({ hourFrom, setHourFr
       />
     </div>
     <div className='w-1/2 flex flex-col gap-y-2'>
-    <span className='ml-1 font-semibold'>To</span>
+    <span className='ml-1 font-semibold'>End</span>
     <TimePicker
         name={nameTo}
         label=""

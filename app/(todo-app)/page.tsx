@@ -10,7 +10,7 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs, { Dayjs } from "dayjs";
 import { Grid, MenuItem, TextField } from "@mui/material";
 import { TextfieldStyle } from "../lib/utils";
-import NothingToDo from "../ui/components/NothingToDo";
+import NothingToDo from "../ui/components/Tasks/NothingToDo";
 
 export default function Home() {
   const [tasksList, setTasklist] = useState<QueryResultRow[]>([]);

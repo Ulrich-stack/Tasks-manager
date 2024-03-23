@@ -7,6 +7,7 @@ import {
   QueueListIcon,
   CheckCircleIcon,
   CalendarIcon,
+  CircleStackIcon
 } from "@heroicons/react/24/outline";
 import { usePathname } from "next/navigation";
 
@@ -15,6 +16,11 @@ const NavLinks = [
     name: "Tasks",
     href: "/",
     icon: QueueListIcon,
+  },
+  {
+    name: "Categories",
+    href: "/categories",
+    icon: CircleStackIcon,
   },
   {
     name: "Completed",

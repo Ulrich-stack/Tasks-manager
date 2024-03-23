@@ -1,18 +1,8 @@
 "use server";
 import { QueryResultRow, sql } from "@vercel/postgres";
 import { unstable_noStore as noStore } from "next/cache";
-import { Task } from "./definitions";
+import { CategorizedTasks, Task } from "./definitions";
 import dayjs from "dayjs";
-interface TaskType {
-  id: number;
-  name: string;
-  category: string;
-  date: Date; // Assurez-vous que ce type correspond au type de données de votre colonne date.
-  status: string;
-  hourfrom: string;
-  hourto: string;
-  details: string;
-}
 
 export async function addToDb(task: Task) {
   try {
@@ -29,6 +19,37 @@ export async function fetchTodayTasks() {
     const tasks =
       await sql`SELECT * FROM tasks WHERE date = CURRENT_DATE AND status = 'Pending' ORDER BY TO_TIMESTAMP(hourfrom, 'HH24-MI') ASC;`;
     return tasks.rows;
+  } catch (error) {
+    console.log("Error fetching database for tasks: ", error);
+    throw new Error("Error fetching database for tasks");
+  }
+}
+
+export async function fetchAllPendingTask() {
+  try {
+    const results = await sql`SELECT * FROM tasks 
+      WHERE date >= CURRENT_DATE 
+        AND status = 'Pending' 
+      ORDER BY date ASC, TO_TIMESTAMP(hourfrom, 'HH24-MI') ASC;`;
+
+    const tasksByCategory: Map<string, any[]> = new Map();
+
+    results.rows.forEach((task) => { // obtain the array of tasks for each category or set it to a void array
+      // Obtenez le tableau de tâches pour la catégorie actuelle ou initialisez-le
+      const categoryTasks = tasksByCategory.get(task.category) || [];
+      categoryTasks.push(task);
+      tasksByCategory.set(task.category, categoryTasks);
+    });
+
+    const categorizedTasks: CategorizedTasks[] = Array.from(
+      tasksByCategory,
+      ([category, tasks]) => ({
+        category,
+        tasks,
+      })
+    );
+
+    return categorizedTasks;
   } catch (error) {
     console.log("Error fetching database for tasks: ", error);
     throw new Error("Error fetching database for tasks");

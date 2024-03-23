@@ -3,9 +3,9 @@
 import { PlusIcon } from "@heroicons/react/24/outline";
 import { TimePicker } from "@mui/x-date-pickers";
 import { useEffect, useState } from "react";
-import TimePickerComp from "./components/TimePickerComp";
-import DatePickerComp from "./components/DatePickerComp";
-import PeriodPickerComp from "./components/TimePickerComp";
+import TimePickerComp from "./components/Tasks/TimePickerComp";
+import DatePickerComp from "./components/Tasks/DatePickerComp";
+import PeriodPickerComp from "./components/Tasks/TimePickerComp";
 import dayjs, { Dayjs } from "dayjs";
 import {
   fixedCategories,
@@ -75,8 +75,8 @@ function TaskCreation({ reloadData }: { reloadData: any }) {
     temp = {
       ...temp,
       date: dayjs(date).format("YYYY-MM-DD") || dayjs().toString(),
-      hourfrom: dayjs(hourFrom).format("HH-mm") || "",
-      hourto: dayjs(hourTo).format("HH-mm") || "",
+      hourfrom: dayjs(hourFrom, 'hh:mm A').format("hh:mm A") || "",
+      hourto: dayjs(hourTo, 'hh:mm A').format("hh:mm A") || "",
     };
     setNewTask(temp);
 

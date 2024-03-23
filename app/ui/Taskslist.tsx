@@ -39,7 +39,10 @@ function Taskslist({
         return (
           <div
             key={"task " + task.id}
-            className="w-full flex flex-col gap-y-2 bg-white p-2 rounded-md border"
+            className="w-full flex flex-col gap-y-2 bg-white p-2 rounded-md border border-t-4 shadow-md"
+            style={{
+              borderTopColor: color
+            }}
           >
             <div className="w-full flex items-center justify-between">
               <p className="font-semibold">{task.name}</p>
@@ -56,16 +59,15 @@ function Taskslist({
             <div className="flex items-center rounded text-gray-400 w-fit">
               <ClockIcon className="w-4 text-gray-500 mr-1" />
               <span className="text-xs">
-                {dayjs(task.hourfrom, "HH:mm").format("HH:mm A") +
+                {dayjs(task.hourfrom, "HH:mm A").format("HH:mm") +
                   " - " +
-                  dayjs(task.hourto, "HH:mm").format("HH:mm A")}
+                  dayjs(task.hourto, "HH:mm A").format("HH:mm")}
               </span>
             </div>
             <div className="flex items-center">
               <div
                 className="px-1 rounded-md"
                 style={{
-                  backgroundColor: `rgba(${color}, 0,1)`,
                   color: color,
                 }}
               >
@@ -81,7 +83,7 @@ function Taskslist({
                   className={`ml-2 w-4 h-4 border rounded-md`}
                   style={{ borderColor: color }}
                 ></div>
-              )}{" "}
+              )}
             </div>
           </div>
         );
