@@ -10,7 +10,7 @@ import { log } from "console";
 import dayjs, { Dayjs } from "dayjs";
 import React, { useEffect, useState } from "react";
 
-function page() {
+function Home() {
   const [today, setToday] = useState<Dayjs | undefined>(dayjs());
   const [categorizedTasks, setCategorizedTasks] = useState<CategorizedTasks[]>([]);
 
@@ -68,4 +68,4 @@ function page() {
   );
 }
 
-export default page;
+export default Home;
