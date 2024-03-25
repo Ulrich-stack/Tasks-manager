@@ -4,32 +4,42 @@ import {
   deleteTaskFromDb,
   fetchCategories,
   fetchTodayTasks,
-} from "../lib/script";
+} from "../../../lib/script";
 import { ClockIcon, TrashIcon } from "@heroicons/react/24/outline";
-import { hasIcon, iconIndex, stringToColor } from "../lib/utils";
-import { categories } from "../lib/categories";
-import { useEffect, useState } from "react";
+import { hasIcon, iconIndex, stringToColor } from "../../../lib/utils";
+import { categories } from "../../../lib/categories";
+import { useContext, useEffect, useState } from "react";
 import EditTask from "./EditTask";
 import { QueryResultRow } from "@vercel/postgres";
 import { Textarea } from "@mui/joy";
 import dayjs from "dayjs";
+import { TasksStateContext } from "../../../(todo-app)/page";
+import { useSnackbar } from "./SnackbarContext";
 
 function Taskslist({
   tasksList,
   reloadData,
 }: {
   tasksList: QueryResultRow[];
-  reloadData: any;
+  reloadData: () => void;
 }) {
+
+  const context = useContext(TasksStateContext);
+  const {showMessage} = useSnackbar();
+
+  if(!context) 
+  throw new Error("Could not find provider");
+
+  const {dispatch} = context;
+
   async function deleteTask(idTask: number) {
     try {
-      await deleteTaskFromDb(idTask); // Attendre la suppression de la tâche
-      await reloadData(); // Attendre la récupération des données mises à jour
+      await deleteTaskFromDb(idTask);
 
-      console.log("Task deleted:", idTask);
     } catch (error) {
       console.error("An error occurred while deleting the task", error);
     }
+    
   }
 
   return (
@@ -50,7 +60,11 @@ function Taskslist({
                 <TrashIcon
                   width={"15px"}
                   className="text-red-500 hover:cursor-pointer"
-                  onClick={(e) => deleteTask(task.id)}
+                  onClick={(e) => {
+                    deleteTask(task.id);
+                  dispatch({type: 'DELETE', payload: task.id});
+                  showMessage(<span><strong>{task.name}</strong> successfully deleted.</span>);
+                }}
                 />
                 {/* <EllipsisHorizontalIcon width={"15px"} className="hover:cursor-pointer"/> */}
                 <EditTask task={task} reloadData={reloadData} />
@@ -73,17 +87,12 @@ function Taskslist({
               >
                 {task.category}
               </div>
-              {hasIcon(task.category) ? (
+              {hasIcon(task.category) && (
                 <img
                   src={`/icons/${categories[iconIndex(task.category)].icon}`}
                   className="w-5 ml-2"
                 ></img>
-              ) : (
-                <div
-                  className={`ml-2 w-4 h-4 border rounded-md`}
-                  style={{ borderColor: color }}
-                ></div>
-              )}
+              ) }
             </div>
           </div>
         );

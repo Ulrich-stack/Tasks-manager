@@ -19,7 +19,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <main className="min-h-screen md:flex overflow-hidden p-2 bg-white text-xs">
-          <div className="w-full md:w-64 border">
+          <div className=" md:w-64 border">
           <Sibebar/>
           </div>
           <div className="w-full">

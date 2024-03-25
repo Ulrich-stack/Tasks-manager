@@ -38,7 +38,7 @@ function Sibebar() {
     const pathname = usePathname();
 
   return (
-    <div className="bg-white h-full p-4 sticky">
+    <div className=" w-56 bg-white h-full p-4 sticky">
       <h3 className="mt-5 font-bold text-xl">ToDo</h3>
       <div className="flex flex-col gap-2 mt-4">
         {NavLinks.map((NavLink) => {

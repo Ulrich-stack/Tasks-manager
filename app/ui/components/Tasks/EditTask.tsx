@@ -4,10 +4,13 @@ import * as React from "react";
 import Popover from "@mui/material/Popover";
 import Typography from "@mui/material/Typography";
 import { EllipsisVerticalIcon, PencilIcon } from "@heroicons/react/24/outline";
-import { taskCompleted } from "../lib/script";
+import { taskCompleted } from "../../../lib/script";
 import { CheckCircleIcon } from "@heroicons/react/24/solid";
-import { Task } from "../lib/definitions";
+import { Task } from "../../../lib/definitions";
 import UpdateTask from "./UpdateTask";
+import { TasksStateContext } from "../../../(todo-app)/page";
+import { useContext } from "react";
+import { useSnackbar } from "./SnackbarContext";
 
 export default function EditTask({
   task,
@@ -16,6 +19,9 @@ export default function EditTask({
   task: any;
   reloadData: any;
 }) {
+  const context = useContext(TasksStateContext);
+  const {showMessage} =useSnackbar();
+
   const [anchorEl, setAnchorEl] = React.useState<HTMLButtonElement | null>(
     null
   );
@@ -23,6 +29,10 @@ export default function EditTask({
   const handleOpenModal = () => setOpenModal(true);
   const handleCloseModal = () => setOpenModal(false);
 
+  if(!context) 
+  throw new Error("Could not find provider");
+
+  const {dispatch} = context;
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
     setAnchorEl(event.currentTarget);
@@ -35,7 +45,7 @@ export default function EditTask({
   async function endTask(id: number) {
     try {
       await taskCompleted(id); // Attendre la suppression de la tâche
-      await reloadData(); // Attendre la récupération des données mises à jour
+      dispatch({type: 'DONE', payload: id})
     } catch (error) {
       console.error("An error occurred while ending the task", error);
     }
@@ -81,6 +91,7 @@ export default function EditTask({
             onClick={(e) => {
               endTask(task.id);
               setAnchorEl(null);
+              showMessage(<span><strong>{task.name}</strong> completed!</span>)
             }}
           >
             <CheckCircleIcon width={"14px"} />

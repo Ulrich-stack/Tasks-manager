@@ -1,6 +1,5 @@
 "use server";
 import { QueryResultRow, sql } from "@vercel/postgres";
-import { unstable_noStore as noStore } from "next/cache";
 import { CategorizedTasks, Task } from "./definitions";
 import dayjs from "dayjs";
 
@@ -35,7 +34,6 @@ export async function fetchAllPendingTask() {
     const tasksByCategory: Map<string, any[]> = new Map();
 
     results.rows.forEach((task) => { // obtain the array of tasks for each category or set it to a void array
-      // Obtenez le tableau de tâches pour la catégorie actuelle ou initialisez-le
       const categoryTasks = tasksByCategory.get(task.category) || [];
       categoryTasks.push(task);
       tasksByCategory.set(task.category, categoryTasks);
@@ -66,12 +64,12 @@ export async function fetch3NextDays() {
 
     const tasksByDay: QueryResultRow[][] = [[], [], []];
 
-    // Obtenez les dates pour aujourd'hui, demain et après-demain
+    // Obtain the next 3 days date
     const today = dayjs().startOf("day");
     const tomorrow = today.add(1, "day");
     const dayAfterTomorrow = today.add(2, "day");
 
-    // Parcourez les résultats et attribuez chaque tâche au tableau correspondant
+    // Run through all of the elements and assign each to one row
     results.rows.map((task: QueryResultRow) => {
       const taskDate = dayjs(task.date).startOf("day");
 
@@ -83,7 +81,6 @@ export async function fetch3NextDays() {
         tasksByDay[2].push(task);
       }
     });
-    console.log("Next 3 days", tasksByDay);
 
     return tasksByDay;
   } catch (error) {
@@ -94,12 +91,11 @@ export async function fetch3NextDays() {
 export async function fetchCategories() {
   try {
     const result =
-      await sql`SELECT categories.name as category, COUNT(tasks.id) AS numberoftasks
-    FROM categories
-    LEFT JOIN tasks ON categories.name = tasks.category
-    GROUP BY categories.name
-    ORDER BY categories.name;`;
-    console.log("Result: ", result);
+      await sql`SELECT categories.name AS category, COUNT(tasks.id) AS numberoftasks
+      FROM categories
+      LEFT JOIN tasks ON categories.name = tasks.category AND tasks.status = 'Pending'
+      GROUP BY categories.name
+      ORDER BY categories.name;`;
 
     const categories = result.rows.map((row) => {
       return {
@@ -107,7 +103,6 @@ export async function fetchCategories() {
         numbers: row.numberoftasks,
       };
     });
-    console.log("Categories: ", categories);
 
     return categories;
   } catch (error) {
@@ -146,9 +141,25 @@ export async function taskCompleted(id: number) {
 export async function updateTask(id: number, task: any) {
   try {
     await sql`UPDATE tasks SET name =${task.taskName}, category = ${task.category}, date = ${task.date}, hourfrom = ${task.hourFrom}, hourto = ${task.hourTo}, details = ${task.details} where id = ${id}`;
-    console.log("Update task: ", task);
   } catch (error) {
     console.log("Error while updating task", error);
     throw new Error("We could not update this task");
+  }
+}
+
+export async function updateCategory(id: number, category: string){
+  try{
+    await sql`UPDATE tasks SET category = ${category} WHERE tasks.id = ${id}`
+  }catch(error){
+    throw new Error("Error while changing category")
+  }
+}
+
+export async function deleteCategory(category: string){
+  try{
+    await sql`DELETE FROM tasks  WHERE category = ${category}`;
+    await sql`DELETE FROM categories WHERE  name = ${category}`;
+  }catch(error){
+    throw new Error("Error while deleting this category");
   }
 }

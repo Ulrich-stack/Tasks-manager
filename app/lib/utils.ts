@@ -1,4 +1,5 @@
-import { Task } from "./definitions";
+import dayjs from "dayjs";
+import { CategorizedTasks, Task, TaskType } from "./definitions";
 import { addToDb, fetchCategories } from "./script";
 
 export function hasEmptyFields(task: object) {
@@ -61,4 +62,45 @@ export function stringToColor(str: string) {
   }
 
   return color;
+}
+
+export function insertAndSortTaskById(categorizedTasks: CategorizedTasks[], taskId: number, newCategory: string): CategorizedTasks[] { 
+  let movedTask: TaskType | undefined;
+  let sourceCategoryIndex: number | undefined;
+
+  // Find the moved task and its original category
+  categorizedTasks.forEach((category, index) => {
+    const foundTaskIndex = category.tasks.findIndex((task: any) => task.id === taskId);
+    if (foundTaskIndex !== -1) {
+      movedTask = category.tasks[foundTaskIndex];
+      sourceCategoryIndex = index;
+      // Remove the task from its old category
+      category.tasks.splice(foundTaskIndex, 1);
+    }
+  });
+
+  // Check if the task was found
+  if (!movedTask) {
+    console.error("Task not found with ID:", taskId);
+    return categorizedTasks;
+  }
+
+  // Find or initialize the new category
+  let targetCategory = categorizedTasks.find(category => category.category === newCategory);
+  if (!targetCategory) {
+    targetCategory = { category: newCategory, tasks: [] };
+    categorizedTasks.push(targetCategory);
+  }
+
+  // Add the task to the new category
+  targetCategory.tasks.push(movedTask);
+
+  // Sort the tasks in the new category by date and then by time
+  targetCategory.tasks.sort((a: any, b: any) => {
+    const dateComparison = dayjs(a.date).diff(dayjs(b.date));
+    if (dateComparison !== 0) return dateComparison;
+    return a.hourfrom.localeCompare(b.hourfrom);
+  });
+
+  return categorizedTasks;
 }

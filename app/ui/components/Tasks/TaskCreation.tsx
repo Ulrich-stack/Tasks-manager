@@ -2,10 +2,10 @@
 
 import { PlusIcon } from "@heroicons/react/24/outline";
 import { TimePicker } from "@mui/x-date-pickers";
-import { useEffect, useState } from "react";
-import TimePickerComp from "./components/Tasks/TimePickerComp";
-import DatePickerComp from "./components/Tasks/DatePickerComp";
-import PeriodPickerComp from "./components/Tasks/TimePickerComp";
+import { useContext, useEffect, useState } from "react";
+import TimePickerComp from "./TimePickerComp";
+import DatePickerComp from "./DatePickerComp";
+import PeriodPickerComp from "./TimePickerComp";
 import dayjs, { Dayjs } from "dayjs";
 import {
   fixedCategories,
@@ -13,12 +13,16 @@ import {
   hasIcon,
   iconIndex,
   stringToColor,
-} from "../lib/utils";
-import { categories } from "../lib/categories";
-import { createTask } from "../lib/utils";
-import { fetchCategories } from "../lib/script";
+} from "../../../lib/utils";
+import { categories } from "../../../lib/categories";
+import { createTask } from "../../../lib/utils";
+import { fetch3NextDays, fetchCategories, fetchTodayTasks } from "../../../lib/script";
+import { TasksStateContext } from "../../../(todo-app)/page";
+import { useSnackbar } from "./SnackbarContext";
 
 function TaskCreation({ reloadData }: { reloadData: any }) {
+  const {showMessage} = useSnackbar();
+
   const [isOverlayVisible, setIsOverlayVisible] = useState(false);
   const [categoryClicked, setCategoryClicked] = useState("");
   const [hourFrom, setHourFrom] = useState<Dayjs | null>(null);
@@ -40,6 +44,30 @@ function TaskCreation({ reloadData }: { reloadData: any }) {
     hourfrom: "",
     hourto: "",
   });
+
+  const context = useContext(TasksStateContext);
+
+  if(!context) 
+  throw new Error("Could not find provider");
+
+  const {dispatch} = context;
+
+  function loadData(){
+    dispatch({type: 'LOADING'});
+
+    fetchTodayTasks()
+    .then(tasks =>{
+      dispatch({type: 'LOAD_TASKS_SUCCESS', payload: tasks})
+    })
+    .catch(error =>{
+      console.log(error);
+    })
+
+    fetch3NextDays()
+    .then(tasks =>{
+      dispatch({type: 'LOAD_NEXT_3DAYS_SUCCESS', payload: tasks})
+    })
+  }
 
   useEffect(() => {
     async function loadCategories() {
@@ -84,12 +112,12 @@ function TaskCreation({ reloadData }: { reloadData: any }) {
 
     if (!hasEmptyFields(temp)) {
       createTask(temp);
-      reloadData(); // Fetch the database for change once we add a task and change the taskList Array of the parent component
-
+      loadData(); // Fetch the database for change once we add a task and change the taskList Array of the parent component
+      showMessage(<span><strong>{temp.name}</strong>  has been added!</span>);
       temp = {
         name: "",
         category: "",
-        date: "",
+        date: dayjs().format("YYYY-MM-DD"),
         status: "Pending",
         hourfrom: "",
         hourto: "",
@@ -98,7 +126,7 @@ function TaskCreation({ reloadData }: { reloadData: any }) {
       setCategoryClicked("");
       setHourFrom(null);
       setHourTo(null);
-      setDate(null);
+      setDate(dayjs());
       setNewTask(temp);
     } else setShowWarningText(true);
   }

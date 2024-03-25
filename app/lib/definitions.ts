@@ -1,3 +1,13 @@
+import { QueryResultRow } from "@vercel/postgres";
+
+export type Action =
+  | { type: "LOADING" }
+  | { type: "LOAD_TASKS_SUCCESS"; payload: any[] }
+  | { type: "LOAD_NEXT_3DAYS_SUCCESS"; payload: QueryResultRow[][] | undefined }
+  | { type: "EDIT_TASK"; payload: any }
+  | { type: "DELETE"; payload: number }
+  | { type: "DONE"; payload: number};
+
 export type Task = {
     name: string,
     category: string;
@@ -23,3 +33,7 @@ export interface TaskType {
     tasks: any[];
   }
   
+  export interface TasksContextType {
+    state: any;
+    dispatch: React.Dispatch<Action>;
+  }

@@ -1,15 +1,16 @@
 import * as React from "react";
 import Box from "@mui/material/Box";
 import Modal from "@mui/material/Modal";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import dayjs, { Dayjs } from "dayjs";
-import DatePickerComp from "./components/Tasks/DatePickerComp";
+import DatePickerComp from "./DatePickerComp";
 import { MenuItem, Select, TextField } from "@mui/material";
-import { TextfieldStyle } from "../lib/utils";
-import TimePickerComp from "./components/Tasks/TimePickerComp";
+import { TextfieldStyle } from "../../../lib/utils";
+import TimePickerComp from "./TimePickerComp";
 import { Textarea } from "@mui/joy";
-import { fetchCategories, updateTask } from "../lib/script";
-import { log } from "console";
+import { fetchCategories, updateTask } from "../../../lib/script";
+import { TasksStateContext } from "../../../(todo-app)/page";
+import { useSnackbar } from "./SnackbarContext";
 
 const style = {
   position: "absolute" as "absolute",
@@ -33,12 +34,14 @@ export default function UpdateTask({
   onClose: () => void;
   reloadData: ()=> void
 }) {
+  const {showMessage} =useSnackbar();
+
   const [date, setDate] = useState<Dayjs | null>(dayjs(task.date));
   const [hourFrom, setHourFrom] = useState<Dayjs | null>(
     dayjs(task.hourfrom, "HH:mm")
   );
   const [hourTo, setHourTo] = useState<Dayjs | null>(
-    dayjs(task.hourTo, "HH:mm")
+    dayjs(task.hourto, "HH:mm")
   );
   const [details, setDetails] = useState<string>(task.details);
   const [category, setCategory] = useState<string>(task.category);
@@ -48,6 +51,13 @@ export default function UpdateTask({
       numbers: "",
     },
   ]);
+
+  const context = useContext(TasksStateContext);
+
+  if(!context) 
+  throw new Error("Could not find provider");
+
+  const {dispatch} = context;
 
   React.useEffect(() => {
     async function loadCategories() {
@@ -70,6 +80,26 @@ export default function UpdateTask({
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
     const formObject = Object.fromEntries(formData.entries());
+    console.log(formObject);
+    
+    const updatePayload = {
+      id: task.id, 
+      data: {
+        name: formObject.taskName,
+        category: formObject.category,
+        date: formObject.date, 
+        hourfrom: hourFrom,
+        hourto: hourTo,
+        details: formObject.details,
+      },
+    };
+
+    dispatch({
+      type: 'EDIT_TASK',
+      payload: updatePayload
+    });    
+    showMessage(<span><strong>{task.name}</strong> successfully updated!</span>)
+    
     try{
       await updateTask(task.id, formObject);
       console.log("Update with success: ", task.id);
@@ -78,7 +108,7 @@ export default function UpdateTask({
       throw new Error("We could not update this task");
     }  
     reloadData();
-    console.log("Update", formObject);
+
   }
 
   return (

@@ -1,66 +1,60 @@
 "use client";
 
-import Taskslist from "../ui/Taskslist";
+import Taskslist from "../ui/components/Tasks/Taskslist";
 import { fetch3NextDays, fetchTodayTasks } from "../lib/script";
-import { useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useReducer, useState } from "react";
 import { QueryResultRow } from "@vercel/postgres";
-import TaskCreation from "../ui/TaskCreation";
+import TaskCreation from "../ui/components/Tasks/TaskCreation";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs, { Dayjs } from "dayjs";
-import { Grid, MenuItem, TextField } from "@mui/material";
+import { MenuItem, TextField } from "@mui/material";
 import { TextfieldStyle } from "../lib/utils";
 import NothingToDo from "../ui/components/Tasks/NothingToDo";
+import { initialState, taskReducer } from "../lib/hooks/tasksReducer";
+import { TasksContextType } from "../lib/definitions";
+import { SnackbarProvider } from "../ui/components/Tasks/SnackbarContext";
+
+export const TasksStateContext = createContext<TasksContextType | undefined>( undefined);
 
 export default function Home() {
-  const [tasksList, setTasklist] = useState<QueryResultRow[]>([]);
-  const [today, setToday] = useState<Dayjs | undefined>(dayjs());
   const [period, setPeriod] = useState("Today");
-  const [next3days, setNext3days] = useState<QueryResultRow[][] | undefined>([
-    [],
-    [],
-    [],
-  ]);
+  // const [tasksList, setTasklist] = useState<QueryResultRow[]>([]);
+  // const [next3days, setNext3days] = useState<QueryResultRow[][] | undefined>([[],[],[]]);
+const [state, dispatch] = useReducer(taskReducer, initialState);
+  
 
-  async function getTasks() {
-    try {
-      const data = await fetchTodayTasks();
-      setTasklist(data);
-      console.log("Fetch", data);
-    } catch (error) {
-      console.log("An error occured while fetching data from client");
-    }
-  }
-
-  async function getNext3Days() {
-    try {
-      const data = await fetch3NextDays();
-      setNext3days(data);
-      console.log("Fetch", data);
-    } catch (error) {
-      console.log("An error occured while fetching data from client");
-    }
-  }
   async function reloadData() {
-    await getTasks();
-    await getNext3Days();
     console.log("Reloading");
   }
 
   useEffect(() => {
-    getTasks();
-    // fetch3NextDays();
-    getNext3Days();
+    dispatch({type: 'LOADING'});
+
+    fetchTodayTasks()
+    .then(tasks =>{
+      dispatch({type: 'LOAD_TASKS_SUCCESS', payload: tasks})
+    })
+    .catch(error =>{
+      console.log(error);
+    })
+
+    fetch3NextDays()
+    .then(tasks =>{
+      dispatch({type: 'LOAD_NEXT_3DAYS_SUCCESS', payload: tasks})
+    })
   }, []);
 
   return (
+    <TasksStateContext.Provider  value={{state, dispatch}} >
+      <SnackbarProvider>
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <div className="px-20 py-10 w-full h-full">
         <div className="flex items-center justify-between w-full border-b pb-6">
           <div>
             <h1 className="font-bold text-2xl">Good morning Ulrich! 👋</h1>
             <p className="text-gray-600 mt-3">
-              Today, {today?.format("dddd D MMMM YYYY")}
+              Today, {dayjs()?.format("dddd D MMMM YYYY")}
             </p>
           </div>
           <TextField
@@ -91,16 +85,18 @@ export default function Home() {
         </div>
         <>
           {period === "Today" ? (
-            tasksList.length?
-            <div className="w-1/3 mt-10 max-h-screen overflow-hidden">
-              
-              <Taskslist tasksList={tasksList} reloadData={reloadData} />
-            </div>:<NothingToDo/>
+            state.tasksList.length ? (
+              <div className="w-1/3 mt-10 max-h-screen overflow-hidden">
+                <Taskslist tasksList={state.tasksList} reloadData={reloadData} />
+              </div>
+            ) : (
+              <NothingToDo />
+            )
           ) : (
             <div className="flex h-full gap-x-2 mt-4">
-              {next3days?.map((tab, index) => {
+              {state.next3Days?.map((tab: any, index: number) => {
                 console.log("Tab ", index, " content: ", tab);
-                const dateIn2Days = dayjs().add(2, 'day');
+                const dateIn2Days = dayjs().add(2, "day");
 
                 return (
                   <div
@@ -116,7 +112,9 @@ export default function Home() {
                     )}
                     {tab.length ? (
                       <Taskslist tasksList={tab} reloadData={reloadData} />
-                    ) : <NothingToDo/>}
+                    ) : (
+                      <NothingToDo />
+                    )}
                   </div>
                 );
               })}
@@ -126,5 +124,7 @@ export default function Home() {
         <TaskCreation reloadData={reloadData} />
       </div>
     </LocalizationProvider>
+    </SnackbarProvider>
+    </TasksStateContext.Provider>
   );
 }
