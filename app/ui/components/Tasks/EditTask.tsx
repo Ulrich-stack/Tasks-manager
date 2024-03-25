@@ -8,9 +8,9 @@ import { taskCompleted } from "../../../lib/script";
 import { CheckCircleIcon } from "@heroicons/react/24/solid";
 import { Task } from "../../../lib/definitions";
 import UpdateTask from "./UpdateTask";
-import { TasksStateContext } from "../../../(todo-app)/page";
 import { useContext } from "react";
 import { useSnackbar } from "./SnackbarContext";
+import { TasksStateContext } from "@/app/lib/hooks/TasksStateContext";
 
 export default function EditTask({
   task,

@@ -17,8 +17,8 @@ import {
 import { categories } from "../../../lib/categories";
 import { createTask } from "../../../lib/utils";
 import { fetch3NextDays, fetchCategories, fetchTodayTasks } from "../../../lib/script";
-import { TasksStateContext } from "../../../(todo-app)/page";
 import { useSnackbar } from "./SnackbarContext";
+import { TasksStateContext } from "@/app/lib/hooks/TasksStateContext";
 
 function TaskCreation({ reloadData }: { reloadData: any }) {
   const {showMessage} = useSnackbar();

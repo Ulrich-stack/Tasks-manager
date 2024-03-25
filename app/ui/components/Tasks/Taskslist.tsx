@@ -13,8 +13,9 @@ import EditTask from "./EditTask";
 import { QueryResultRow } from "@vercel/postgres";
 import { Textarea } from "@mui/joy";
 import dayjs from "dayjs";
-import { TasksStateContext } from "../../../(todo-app)/page";
 import { useSnackbar } from "./SnackbarContext";
+import { TasksStateContext } from "@/app/lib/hooks/TasksStateContext";
+import Image from "next/image";
 
 function Taskslist({
   tasksList,
@@ -88,10 +89,13 @@ function Taskslist({
                 {task.category}
               </div>
               {hasIcon(task.category) && (
-                <img
+                <Image
                   src={`/icons/${categories[iconIndex(task.category)].icon}`}
-                  className="w-5 ml-2"
-                ></img>
+                  alt={`${task.category}-icon`}
+                  className="ml-2"
+                  width={16}
+                  height={16}
+                ></Image>
               ) }
             </div>
           </div>

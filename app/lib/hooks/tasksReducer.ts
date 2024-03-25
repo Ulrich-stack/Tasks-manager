@@ -7,6 +7,7 @@ export const initialState = {
   next3Days: <QueryResultRow>[[], [], []],
 };
 
+
 export function taskReducer(state: any, action: Action) {
   switch (action.type) {
     case "LOADING":

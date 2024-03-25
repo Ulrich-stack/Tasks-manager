@@ -9,8 +9,8 @@ import { TextfieldStyle } from "../../../lib/utils";
 import TimePickerComp from "./TimePickerComp";
 import { Textarea } from "@mui/joy";
 import { fetchCategories, updateTask } from "../../../lib/script";
-import { TasksStateContext } from "../../../(todo-app)/page";
 import { useSnackbar } from "./SnackbarContext";
+import { TasksStateContext } from "@/app/lib/hooks/TasksStateContext";
 
 const style = {
   position: "absolute" as "absolute",
@@ -37,12 +37,8 @@ export default function UpdateTask({
   const {showMessage} =useSnackbar();
 
   const [date, setDate] = useState<Dayjs | null>(dayjs(task.date));
-  const [hourFrom, setHourFrom] = useState<Dayjs | null>(
-    dayjs(task.hourfrom, "HH:mm")
-  );
-  const [hourTo, setHourTo] = useState<Dayjs | null>(
-    dayjs(task.hourto, "HH:mm")
-  );
+  const [hourFrom, setHourFrom] = useState<Dayjs | null>(dayjs(task.hourfrom, "HH:mm"));
+  const [hourTo, setHourTo] = useState<Dayjs | null>(dayjs(task.hourto, "HH:mm"));
   const [details, setDetails] = useState<string>(task.details);
   const [category, setCategory] = useState<string>(task.category);
   const [allCategories, setAllCategories] = useState([
