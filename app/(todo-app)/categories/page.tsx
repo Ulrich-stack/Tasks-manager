@@ -104,7 +104,7 @@ function Home() {
                   </div>
                 </div>
                 <div
-                  className="grid grid-cols-4 gap-3 mt-2 pt-2 border-t"
+                  className="grid grid-cols-4 max-md:grid-cols-2 gap-3 mt-2 pt-2 border-t"
                   onDragEnter={(e) => {
                     console.log(tasksByCategory.category);
                     setDndItem({
