@@ -18,11 +18,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <main className="min-h-screen md:flex overflow-hidden p-2 bg-white text-xs">
-          <div className=" md:w-64 border">
+        <main className="max-h-screen md:flex overflow-hidden p-2 bg-white text-xs">
+          <div className=" md:w-64 md:min-h-screen border overflow-hidden">
           <Sibebar/>
           </div>
-          <div className="w-full">
+          <div className="w-full h-screen hover:overflow-auto">
           {children}
           </div>
         </main>

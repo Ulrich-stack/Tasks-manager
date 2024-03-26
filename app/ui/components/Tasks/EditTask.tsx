@@ -14,10 +14,8 @@ import { TasksStateContext } from "@/app/lib/hooks/TasksStateContext";
 
 export default function EditTask({
   task,
-  reloadData,
 }: {
   task: any;
-  reloadData: any;
 }) {
   const context = useContext(TasksStateContext);
   const {showMessage} =useSnackbar();
@@ -99,7 +97,7 @@ export default function EditTask({
           </button>
         </Typography>
       </Popover>
-      <UpdateTask task={task} open={openModal} onClose={handleCloseModal} reloadData={reloadData} />
+      <UpdateTask task={task} open={openModal} onClose={handleCloseModal} />
     </div>
   );
 }

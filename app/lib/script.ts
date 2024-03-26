@@ -26,19 +26,31 @@ export async function fetchTodayTasks() {
 
 export async function fetchAllPendingTask() {
   try {
-    const results = await sql`SELECT * FROM tasks 
-      WHERE date >= CURRENT_DATE 
-        AND status = 'Pending' 
+    // Premièrement, récupérer toutes les catégories
+    const categoriesResult = await sql`SELECT name FROM categories`;
+
+    // Ensuite, récupérer toutes les tâches en attente
+    const tasksResult = await sql`SELECT * FROM tasks
+      WHERE date >= CURRENT_DATE
+        AND status = 'Pending'
       ORDER BY date ASC, TO_TIMESTAMP(hourfrom, 'HH24-MI') ASC;`;
 
-    const tasksByCategory: Map<string, any[]> = new Map();
+    // Initialiser un Map pour stocker les tâches par catégorie
+    const tasksByCategory = new Map();
 
-    results.rows.forEach((task) => { // obtain the array of tasks for each category or set it to a void array
-      const categoryTasks = tasksByCategory.get(task.category) || [];
-      categoryTasks.push(task);
-      tasksByCategory.set(task.category, categoryTasks);
+    // Remplir le Map avec les catégories vides
+    categoriesResult.rows.forEach((category) => {
+      tasksByCategory.set(category.name, []);
     });
 
+    // Associer les tâches aux catégories correspondantes
+    tasksResult.rows.forEach((task) => {
+      if (tasksByCategory.has(task.category)) {
+        tasksByCategory.get(task.category).push(task);
+      }
+    });
+
+    // Transformer le Map en tableau au format attendu
     const categorizedTasks: CategorizedTasks[] = Array.from(
       tasksByCategory,
       ([category, tasks]) => ({
@@ -46,6 +58,7 @@ export async function fetchAllPendingTask() {
         tasks,
       })
     );
+    categorizedTasks.sort((a, b) => b.tasks.length - a.tasks.length);
 
     return categorizedTasks;
   } catch (error) {
@@ -147,19 +160,19 @@ export async function updateTask(id: number, task: any) {
   }
 }
 
-export async function updateCategory(id: number, category: string){
-  try{
-    await sql`UPDATE tasks SET category = ${category} WHERE tasks.id = ${id}`
-  }catch(error){
-    throw new Error("Error while changing category")
+export async function updateCategory(id: number, category: string) {
+  try {
+    await sql`UPDATE tasks SET category = ${category} WHERE tasks.id = ${id}`;
+  } catch (error) {
+    throw new Error("Error while changing category");
   }
 }
 
-export async function deleteCategory(category: string){
-  try{
+export async function deleteCategory(category: string) {
+  try {
     await sql`DELETE FROM tasks  WHERE category = ${category}`;
     await sql`DELETE FROM categories WHERE  name = ${category}`;
-  }catch(error){
+  } catch (error) {
     throw new Error("Error while deleting this category");
   }
 }

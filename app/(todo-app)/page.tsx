@@ -24,10 +24,6 @@ export default function Home() {
   const [period, setPeriod] = useState("Today");
   const [state, dispatch] = useReducer(taskReducer, initialState);
 
-  async function reloadData() {
-    console.log("Reloading");
-  }
-
   useEffect(() => {
     dispatch({ type: "LOADING" });
 
@@ -88,7 +84,6 @@ export default function Home() {
                   <div className="w-1/3 mt-10 max-h-screen overflow-hidden">
                     <Taskslist
                       tasksList={state.tasksList}
-                      reloadData={reloadData}
                     />
                   </div>
                 ) : (
@@ -117,7 +112,7 @@ export default function Home() {
                           </span>
                         )}
                         {tab.length ? (
-                          <Taskslist tasksList={tab} reloadData={reloadData} />
+                          <Taskslist tasksList={tab}/>
                         ) : (
                           <NothingToDo />
                         )}
@@ -127,7 +122,7 @@ export default function Home() {
                 </div>
               )}
             </>
-            <TaskCreation reloadData={reloadData} />
+            <TaskCreation />
           </div>
         </LocalizationProvider>
       </SnackbarProvider>

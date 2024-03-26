@@ -19,10 +19,9 @@ import Image from "next/image";
 
 function Taskslist({
   tasksList,
-  reloadData,
 }: {
   tasksList: QueryResultRow[];
-  reloadData: () => void;
+
 }) {
 
   const context = useContext(TasksStateContext);
@@ -68,7 +67,7 @@ function Taskslist({
                 }}
                 />
                 {/* <EllipsisHorizontalIcon width={"15px"} className="hover:cursor-pointer"/> */}
-                <EditTask task={task} reloadData={reloadData} />
+                <EditTask task={task} />
               </div>
             </div>
             <div className="flex items-center rounded text-gray-400 w-fit">

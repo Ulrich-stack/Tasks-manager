@@ -27,12 +27,10 @@ export default function UpdateTask({
   task,
   open,
   onClose,
-  reloadData
 }: {
   task: any;
   open: boolean;
   onClose: () => void;
-  reloadData: ()=> void
 }) {
   const {showMessage} =useSnackbar();
 
@@ -59,7 +57,6 @@ export default function UpdateTask({
     async function loadCategories() {
       try {
         const newCategories = await fetchCategories();
-        console.log(newCategories);
 
         setAllCategories(newCategories);
       } catch (error) {
@@ -98,12 +95,10 @@ export default function UpdateTask({
     
     try{
       await updateTask(task.id, formObject);
-      console.log("Update with success: ", task.id);
     }catch(error){
       console.log("Update failed", error);
       throw new Error("We could not update this task");
     }  
-    reloadData();
 
   }
 
