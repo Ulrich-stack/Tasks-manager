@@ -7,3 +7,8 @@ In Categories i show all tasks pending by category. Here, you can change the cat
 all tasks linked to a category.
 
 
+
+## Environment
+
+- `POSTGRES_URL` (and the other `@vercel/postgres` variables): database connection.
+- `NEXT_PUBLIC_USER_NAME` (optional): name shown in the greeting, e.g. "Good morning, Ulrich".

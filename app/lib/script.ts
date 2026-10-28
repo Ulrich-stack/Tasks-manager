@@ -1,177 +1,112 @@
 "use server";
 import { QueryResultRow, sql } from "@vercel/postgres";
-import { CategorizedTasks, Task } from "./definitions";
-import dayjs from "dayjs";
+import { NewTask, TaskType, TaskUpdate } from "./definitions";
 
-export async function addToDb(task: Task) {
+// Dates leave the database as "YYYY-MM-DD" strings so the client decides
+// what "today" is in its own time zone.
+function toTask(row: QueryResultRow): TaskType {
+  return {
+    id: row.id,
+    name: row.name,
+    category: row.category,
+    date: row.date,
+    status: row.status,
+    hourfrom: row.hourfrom ?? "",
+    hourto: row.hourto ?? "",
+    details: row.details ?? "",
+  };
+}
+
+export async function fetchPendingTasks() {
   try {
-    await sql`INSERT INTO tasks (Name, Category, Date, Status, HourFrom, HourTo, Details) VALUES (${task.name}, ${task.category}, ${task.date}, ${task.status}, ${task.hourfrom}, ${task.hourto}, ${task.name})`;
-    await sql`INSERT INTO categories (name) SELECT ${task.category} WHERE NOT EXISTS (SELECT 1 FROM categories WHERE name = ${task.category})`;
+    const result = await sql`SELECT id, name, category, to_char(date, 'YYYY-MM-DD') AS date,
+        status, hourfrom, hourto, details
+      FROM tasks WHERE status = 'Pending'`;
+    return result.rows.map(toTask);
   } catch (error) {
-    console.log("Error when adding to db : ", error);
-    throw new Error("Creating Error");
+    console.log("Error fetching pending tasks: ", error);
+    throw new Error("Error fetching pending tasks");
   }
 }
 
-export async function fetchTodayTasks() {
+export async function fetchCompletedTasks() {
   try {
-    const tasks =
-      await sql`SELECT * FROM tasks WHERE date = CURRENT_DATE AND status = 'Pending' ORDER BY TO_TIMESTAMP(hourfrom, 'HH24-MI') ASC;`;
-    return tasks.rows;
+    const result = await sql`SELECT id, name, category, to_char(date, 'YYYY-MM-DD') AS date,
+        status, hourfrom, hourto, details
+      FROM tasks WHERE status = 'Done'
+      ORDER BY date DESC, id DESC
+      LIMIT 300`;
+    return result.rows.map(toTask);
   } catch (error) {
-    console.log("Error fetching database for tasks: ", error);
-    throw new Error("Error fetching database for tasks");
+    console.log("Error fetching completed tasks: ", error);
+    throw new Error("Error fetching completed tasks");
   }
 }
 
-export async function fetchAllPendingTask() {
+export async function fetchTasksBetween(from: string, to: string) {
   try {
-    // Premièrement, récupérer toutes les catégories
-    const categoriesResult = await sql`SELECT name FROM categories`;
-
-    // Ensuite, récupérer toutes les tâches en attente
-    const tasksResult = await sql`SELECT * FROM tasks
-      WHERE date >= CURRENT_DATE
-        AND status = 'Pending'
-      ORDER BY date ASC, TO_TIMESTAMP(hourfrom, 'HH24-MI') ASC;`;
-
-    // Initialiser un Map pour stocker les tâches par catégorie
-    const tasksByCategory = new Map();
-
-    // Remplir le Map avec les catégories vides
-    categoriesResult.rows.forEach((category) => {
-      tasksByCategory.set(category.name, []);
-    });
-
-    // Associer les tâches aux catégories correspondantes
-    tasksResult.rows.forEach((task) => {
-      if (tasksByCategory.has(task.category)) {
-        tasksByCategory.get(task.category).push(task);
-      }
-    });
-
-    // Transformer le Map en tableau au format attendu
-    const categorizedTasks: CategorizedTasks[] = Array.from(
-      tasksByCategory,
-      ([category, tasks]) => ({
-        category,
-        tasks,
-      })
-    );
-    categorizedTasks.sort((a, b) => b.tasks.length - a.tasks.length);
-
-    return categorizedTasks;
+    const result = await sql`SELECT id, name, category, to_char(date, 'YYYY-MM-DD') AS date,
+        status, hourfrom, hourto, details
+      FROM tasks WHERE date >= ${from} AND date <= ${to}`;
+    return result.rows.map(toTask);
   } catch (error) {
-    console.log("Error fetching database for tasks: ", error);
-    throw new Error("Error fetching database for tasks");
-  }
-}
-
-export async function fetch3NextDays() {
-  try {
-    const results = await sql`SELECT * FROM tasks
-    WHERE date >= CURRENT_DATE
-    AND date < CURRENT_DATE + INTERVAL '4 days'
-    AND status = 'Pending'
-    ORDER BY TO_TIMESTAMP(hourfrom, 'HH24-MI') ASC;`;
-
-    const tasksByDay: QueryResultRow[][] = [[], [], []];
-
-    // Obtain the next 3 days date
-    const today = dayjs().startOf("day");
-    const tomorrow = today.add(1, "day");
-    const dayAfterTomorrow = today.add(2, "day");
-
-    // Run through all of the elements and assign each to one row
-    results.rows.map((task: QueryResultRow) => {
-      const taskDate = dayjs(task.date).startOf("day");
-
-      if (taskDate.isSame(today)) {
-        tasksByDay[0].push(task);
-      } else if (taskDate.isSame(tomorrow)) {
-        tasksByDay[1].push(task);
-      } else if (taskDate.isSame(dayAfterTomorrow)) {
-        tasksByDay[2].push(task);
-      }
-    });
-
-    return tasksByDay;
-  } catch (error) {
-    console.log("Error while fetching for 3 next days");
+    console.log("Error fetching tasks between dates: ", error);
+    throw new Error("Error fetching tasks");
   }
 }
 
 export async function fetchCategories() {
   try {
-    const result =
-      await sql`SELECT categories.name AS category, COUNT(tasks.id) AS numberoftasks
-      FROM categories
-      LEFT JOIN tasks ON categories.name = tasks.category AND tasks.status = 'Pending'
-      GROUP BY categories.name
-      ORDER BY categories.name;`;
-
-    const categories = result.rows.map((row) => {
-      return {
-        name: row.category,
-        numbers: row.numberoftasks,
-      };
-    });
-
-    return categories;
+    const result = await sql`SELECT name FROM categories ORDER BY name`;
+    return result.rows.map((row) => row.name as string);
   } catch (error) {
     console.log("Error fetching categories", error);
     throw new Error("Error fetching Categories");
   }
 }
 
-export async function deleteTaskFromDb(id: number) {
+export async function addToDb(task: NewTask) {
   try {
-    await sql`DELETE FROM tasks where  id=${id}`;
+    const result = await sql`INSERT INTO tasks (Name, Category, Date, Status, HourFrom, HourTo, Details)
+      VALUES (${task.name}, ${task.category}, ${task.date}, 'Pending', ${task.hourfrom}, ${task.hourto}, ${task.details})
+      RETURNING id, name, category, to_char(date, 'YYYY-MM-DD') AS date, status, hourfrom, hourto, details`;
+    await sql`INSERT INTO categories (name) SELECT ${task.category} WHERE NOT EXISTS (SELECT 1 FROM categories WHERE name = ${task.category})`;
+    return toTask(result.rows[0]);
   } catch (error) {
-    console.log("Error while trying to delete  task from db: ", error);
-    throw new Error("Error while  deleting the task.");
+    console.log("Error when adding to db : ", error);
+    throw new Error("Creating Error");
   }
 }
 
-export async function addDetailsToDb(id: number, details: string) {
+export async function updateTask(id: number, task: TaskUpdate) {
+  const current = await sql`SELECT name, category, to_char(date, 'YYYY-MM-DD') AS date,
+      status, hourfrom, hourto, details FROM tasks WHERE id = ${id}`;
+  if (!current.rows.length) throw new Error("This task no longer exists");
+  const next = { ...toTask({ id, ...current.rows[0] }), ...task };
   try {
-    await sql`UPDATE tasks SET details = ${details} WHERE id= ${id};`;
-  } catch (error) {
-    console.log("Error adding Details to task ", error);
-    throw new Error("There was an error adding the details to this task.");
-  }
-}
-
-export async function taskCompleted(id: number) {
-  try {
-    await sql`UPDATE tasks SET status = 'Done' WHERE id = ${id};`;
-  } catch (error) {
-    console.log("Error while ending task", error);
-    throw new Error("We could not end this task.");
-  }
-}
-
-export async function updateTask(id: number, task: any) {
-  try {
-    await sql`UPDATE tasks SET name =${task.taskName}, category = ${task.category}, date = ${task.date}, hourfrom = ${task.hourFrom}, hourto = ${task.hourTo}, details = ${task.details} where id = ${id}`;
+    await sql`UPDATE tasks SET name = ${next.name}, category = ${next.category}, date = ${next.date},
+        status = ${next.status}, hourfrom = ${next.hourfrom}, hourto = ${next.hourto}, details = ${next.details}
+      WHERE id = ${id}`;
+    await sql`INSERT INTO categories (name) SELECT ${next.category} WHERE NOT EXISTS (SELECT 1 FROM categories WHERE name = ${next.category})`;
   } catch (error) {
     console.log("Error while updating task", error);
     throw new Error("We could not update this task");
   }
 }
 
-export async function updateCategory(id: number, category: string) {
+export async function deleteTaskFromDb(id: number) {
   try {
-    await sql`UPDATE tasks SET category = ${category} WHERE tasks.id = ${id}`;
+    await sql`DELETE FROM tasks WHERE id = ${id}`;
   } catch (error) {
-    throw new Error("Error while changing category");
+    console.log("Error while trying to delete task from db: ", error);
+    throw new Error("Error while deleting the task.");
   }
 }
 
 export async function deleteCategory(category: string) {
   try {
-    await sql`DELETE FROM tasks  WHERE category = ${category}`;
-    await sql`DELETE FROM categories WHERE  name = ${category}`;
+    await sql`DELETE FROM tasks WHERE category = ${category}`;
+    await sql`DELETE FROM categories WHERE name = ${category}`;
   } catch (error) {
     throw new Error("Error while deleting this category");
   }

@@ -1,180 +1,174 @@
 "use client";
 
-import { categories } from "@/app/lib/categories";
-import { CategorizedTasks } from "@/app/lib/definitions";
-import {
-  deleteCategory,
-  fetchAllPendingTask,
-  fetchCategories,
-  updateCategory,
-} from "@/app/lib/script";
-import {
-  hasIcon,
-  iconIndex,
-  stringToColor,
-  stringToTint,
-} from "@/app/lib/utils";
-import TaskCard from "@/app/ui/components/Categories/TaskCard";
-import { LocalizationProvider } from "@mui/x-date-pickers";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import Image from "next/image";
-
-import React, { useEffect, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { TrashIcon } from "@heroicons/react/24/outline";
-import { Tooltip } from "@mui/material";
+import { Dialog, Tooltip } from "@mui/material";
+import { categories as categoryIcons } from "@/app/lib/categories";
+import { hasIcon, iconIndex, stringToColor, stringToTint } from "@/app/lib/utils";
+import { useCategorizedTasks, useTasks } from "@/app/lib/hooks/TasksProvider";
+import { TaskType } from "@/app/lib/definitions";
 import SkeletonLoader from "@/app/ui/components/Categories/TasksSkeleton";
 import PageHeader from "@/app/ui/components/PageHeader";
 import NothingToDo from "@/app/ui/components/Tasks/NothingToDo";
-
-const noDrag = { id: -1, src: "", target: "" };
+import TaskItem from "@/app/ui/components/Tasks/TaskItem";
+import SearchFilter, { filterTasks } from "@/app/ui/components/SearchFilter";
 
 function Home() {
-  const [categorizedTasks, setCategorizedTasks] = useState<CategorizedTasks[]>(
-    []
+  const { pending, isLoading, moveTo, removeCategory } = useTasks();
+  const [query, setQuery] = useState("");
+  const [dragged, setDragged] = useState<TaskType | null>(null);
+  const [dropTarget, setDropTarget] = useState("");
+  const [toDelete, setToDelete] = useState("");
+
+  const visible = useMemo(() => filterTasks(pending, query), [pending, query]);
+  const groups = useCategorizedTasks(visible).filter(
+    (group) => !query || group.tasks.length
   );
-  const [isLoading, setIsLoading] = useState(false);
-  const [dndItem, setDndItem] = useState(noDrag);
+  const deleteCount = pending.filter((t) => t.category === toDelete).length;
 
-  async function loadTasks() {
-    setIsLoading(true);
-    try {
-      const results: CategorizedTasks[] = await fetchAllPendingTask();
-      setCategorizedTasks(results);
-    } catch (error) {
-      console.error("Failed to fetch categories:", error);
-    }
-    setIsLoading(false);
-  }
-
-  function handleDeleteCategory(category: string, index: number) {
-    let newCategorizedTasks = [...categorizedTasks];
-    newCategorizedTasks.splice(index, 1);
-    setCategorizedTasks(newCategorizedTasks);
-
-    deleteCategory(category).catch((err) => {
-      console.warn(`Error deleting category ${category}: `, err);
-    });
-  }
-
-  useEffect(() => {
-    loadTasks();
-  }, []);
+  const endDrag = () => {
+    setDragged(null);
+    setDropTarget("");
+  };
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <div className="px-4 py-6 md:px-10 md:py-10 w-full">
-        <PageHeader
-          title="Categories"
-          subtitle="Drag a task onto another category to move it."
-        />
-        <div className="flex flex-col gap-y-5 mt-8 w-full">
-          {isLoading ? (
-            <SkeletonLoader categories={categorizedTasks} />
-          ) : !categorizedTasks.length ? (
-            <NothingToDo
-              title="No categories yet"
-              hint="Create a task to start a category."
-            />
-          ) : (
-            categorizedTasks.map((tasksByCategory, index) => {
-              const color = stringToColor(tasksByCategory.category);
-              const isDropTarget =
-                dndItem.id !== -1 &&
-                dndItem.target === tasksByCategory.category &&
-                dndItem.src !== tasksByCategory.category;
-              return (
-                <section
-                  className={`flex flex-col w-full rounded-2xl border p-4 transition-colors ${
-                    isDropTarget
-                      ? "border-primary bg-primary-soft"
-                      : "border-slate-200 bg-white"
-                  }`}
-                  key={index}
-                  onDragEnter={() => {
-                    setDndItem({
-                      ...dndItem,
-                      target: tasksByCategory.category,
-                    });
-                  }}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    if (dndItem.src !== dndItem.target) {
-                      updateCategory(dndItem.id, dndItem.target);
-                      loadTasks();
-                    }
-                    setDndItem(noDrag);
-                  }}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-x-2">
-                      <span
-                        className="flex items-center justify-center w-8 h-8 rounded-lg"
-                        style={{ backgroundColor: stringToTint(tasksByCategory.category) }}
-                        aria-hidden="true"
-                      >
-                        {hasIcon(tasksByCategory.category) ? (
-                          <Image
-                            src={`/icons/${
-                              categories[iconIndex(tasksByCategory.category)].icon
-                            }`}
-                            width={18}
-                            height={18}
-                            alt=""
-                          />
-                        ) : (
-                          <span
-                            className="w-2.5 h-2.5 rounded-full"
-                            style={{ backgroundColor: color }}
-                          />
-                        )}
-                      </span>
-                      <h2 className="font-semibold text-base text-slate-900">
-                        {tasksByCategory.category}
-                      </h2>
-                      <span className="px-2 rounded-full bg-slate-100 text-xs font-medium text-slate-500 tabular-nums">
-                        {tasksByCategory.tasks.length}
-                      </span>
-                    </div>
-                    <Tooltip title="Delete this category and its tasks" placement="top">
-                      <button
-                        type="button"
-                        aria-label={`Delete category ${tasksByCategory.category}`}
-                        className="flex items-center justify-center w-9 h-9 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                        onClick={() =>
-                          handleDeleteCategory(tasksByCategory.category, index)
-                        }
-                      >
-                        <TrashIcon className="w-[18px]" aria-hidden="true" />
-                      </button>
-                    </Tooltip>
-                  </div>
-                  {tasksByCategory.tasks.length ? (
-                    <div className="grid gap-3 mt-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                      {tasksByCategory.tasks.map((task, taskIndex) => {
-                        return (
-                          <TaskCard
-                            key={task + taskIndex}
-                            tasks={task}
-                            color={color}
-                            item={dndItem}
-                            setDndItem={setDndItem}
-                          />
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div className="mt-4 h-20 flex items-center justify-center rounded-xl border border-dashed border-slate-300 text-slate-500">
-                      No pending task. Drop one here.
-                    </div>
-                  )}
-                </section>
-              );
-            })
-          )}
-        </div>
+    <div className="px-4 py-6 md:px-10 md:py-10 w-full">
+      <PageHeader
+        title="Categories"
+        subtitle="Drag a task onto another category, or use its ⋮ menu → Move to…"
+      />
+      <div className="mt-6">
+        <SearchFilter query={query} setQuery={setQuery} />
       </div>
-    </LocalizationProvider>
+      <div className="flex flex-col gap-y-5 mt-6 w-full">
+        {isLoading ? (
+          <SkeletonLoader categories={[]} />
+        ) : !groups.length ? (
+          query ? (
+            <NothingToDo title="No matching task" hint="Try another search." />
+          ) : (
+            <NothingToDo title="No categories yet" hint="Create a task to start a category." />
+          )
+        ) : (
+          groups.map(({ category, tasks }) => {
+            const isDropTarget =
+              dragged !== null && dropTarget === category && dragged.category !== category;
+            return (
+              <section
+                key={category}
+                aria-labelledby={`cat-${category}`}
+                className={`flex flex-col w-full rounded-2xl border p-4 transition-colors ${
+                  isDropTarget ? "border-primary bg-primary-soft" : "border-slate-200 bg-white"
+                }`}
+                onDragEnter={() => setDropTarget(category)}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  if (dragged) moveTo(dragged, category);
+                  endDrag();
+                }}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-x-2">
+                    <span
+                      className="flex items-center justify-center w-8 h-8 rounded-lg"
+                      style={{ backgroundColor: stringToTint(category) }}
+                      aria-hidden="true"
+                    >
+                      {hasIcon(category) ? (
+                        <Image
+                          src={`/icons/${categoryIcons[iconIndex(category)].icon}`}
+                          width={18}
+                          height={18}
+                          alt=""
+                        />
+                      ) : (
+                        <span
+                          className="w-2.5 h-2.5 rounded-full"
+                          style={{ backgroundColor: stringToColor(category) }}
+                        />
+                      )}
+                    </span>
+                    <h2 id={`cat-${category}`} className="font-semibold text-base text-slate-900">
+                      {category}
+                    </h2>
+                    <span className="px-2 rounded-full bg-slate-100 text-xs font-medium text-slate-500 tabular-nums">
+                      {tasks.length}
+                    </span>
+                  </div>
+                  <Tooltip title="Delete this category" placement="top">
+                    <button
+                      type="button"
+                      aria-label={`Delete category ${category}`}
+                      className="flex items-center justify-center w-9 h-9 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                      onClick={() => setToDelete(category)}
+                    >
+                      <TrashIcon className="w-[18px]" aria-hidden="true" />
+                    </button>
+                  </Tooltip>
+                </div>
+                {tasks.length ? (
+                  <ul className="grid gap-3 mt-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
+                    {tasks.map((task) => (
+                      <li key={task.id}>
+                        <TaskItem
+                          task={task}
+                          showDate
+                          showCategory={false}
+                          onDragStart={() => setDragged(task)}
+                          onDragEnd={endDrag}
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="mt-4 h-20 flex items-center justify-center rounded-xl border border-dashed border-slate-300 text-slate-500">
+                    No pending task. Drop one here.
+                  </div>
+                )}
+              </section>
+            );
+          })
+        )}
+      </div>
+
+      <Dialog
+        open={Boolean(toDelete)}
+        onClose={() => setToDelete("")}
+        aria-labelledby="delete-category-title"
+        PaperProps={{ sx: { borderRadius: "16px", p: 3, maxWidth: 400 } }}
+      >
+        <h2 id="delete-category-title" className="text-lg font-bold text-slate-900">
+          Delete “{toDelete}”?
+        </h2>
+        <p className="mt-2 text-sm text-slate-600">
+          {deleteCount
+            ? `Its ${deleteCount} pending ${deleteCount === 1 ? "task" : "tasks"} and its completed tasks will be deleted too. This cannot be undone.`
+            : "Its completed tasks will be deleted too. This cannot be undone."}
+        </p>
+        <div className="flex justify-end gap-x-2 mt-6 text-sm">
+          <button
+            type="button"
+            autoFocus
+            onClick={() => setToDelete("")}
+            className="px-4 py-2.5 rounded-lg border border-slate-200 text-slate-700 font-medium hover:bg-slate-50 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              removeCategory(toDelete);
+              setToDelete("");
+            }}
+            className="px-4 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold transition-colors"
+          >
+            Delete category
+          </button>
+        </div>
+      </Dialog>
+    </div>
   );
 }
 

@@ -1,51 +1,56 @@
-import React from 'react';
-import { LocalizationProvider, TimePicker } from '@mui/x-date-pickers';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { TextField, styled } from '@mui/material';
-import { Dayjs } from 'dayjs';
-import { TextfieldStyle } from '../../../lib/utils';
-
-
+import React from "react";
+import { TimePicker } from "@mui/x-date-pickers";
+import { Dayjs } from "dayjs";
+import { TextfieldStyle } from "../../../lib/utils";
 
 type PeriodPickerCompProps = {
   hourFrom: Dayjs | null;
   setHourFrom: (value: Dayjs | null) => void;
   hourTo: Dayjs | null;
   setHourTo: (value: Dayjs | null) => void;
-  nameFrom: string;
-  nameTo: string
 };
 
+const fieldProps = {
+  textField: { size: "small" as const, placeholder: "--:--" },
+  field: { clearable: true },
+};
 
-const PeriodPickerComp: React.FC<PeriodPickerCompProps> = ({ hourFrom, setHourFrom, hourTo, setHourTo, nameFrom, nameTo }) => {
+const PeriodPickerComp: React.FC<PeriodPickerCompProps> = ({
+  hourFrom,
+  setHourFrom,
+  hourTo,
+  setHourTo,
+}) => {
   return (
-    <div className="flex gap-x-3">
-    <div className='w-1/2 flex flex-col gap-y-1.5'>
-      <span className='font-medium text-slate-700'>Start</span>
-    <TimePicker
-        name={nameFrom}
-        label=""
-        value={hourFrom}
-        maxTime={hourTo || undefined}
-        onChange={(newValue) => setHourFrom(newValue as Dayjs | null)}
-        slotProps={{textField: {size: 'small', placeholder:" "}}}
-        sx={TextfieldStyle}
-      />
-    </div>
-    <div className='w-1/2 flex flex-col gap-y-1.5'>
-    <span className='font-medium text-slate-700'>End</span>
-    <TimePicker
-        name={nameTo}
-        label=""
-        value={hourTo}
-        minTime={hourFrom || undefined}
-        onChange={(newValue) => setHourTo(newValue as Dayjs | null)}
-        slotProps={{textField: {size: 'small', placeholder:" "}}}
-        sx={TextfieldStyle}
-      />
-    </div>
-
-    </div>
+    <fieldset>
+      <legend className="font-medium text-slate-700 mb-1.5">
+        Time <span className="font-normal text-slate-500">(optional)</span>
+      </legend>
+      <div className="flex gap-x-3">
+        <div className="w-1/2">
+          <TimePicker
+            label="Start"
+            ampm={false}
+            value={hourFrom}
+            maxTime={hourTo || undefined}
+            onChange={(newValue) => setHourFrom(newValue as Dayjs | null)}
+            slotProps={fieldProps}
+            sx={TextfieldStyle}
+          />
+        </div>
+        <div className="w-1/2">
+          <TimePicker
+            label="End"
+            ampm={false}
+            value={hourTo}
+            minTime={hourFrom || undefined}
+            onChange={(newValue) => setHourTo(newValue as Dayjs | null)}
+            slotProps={fieldProps}
+            sx={TextfieldStyle}
+          />
+        </div>
+      </div>
+    </fieldset>
   );
 };
 
