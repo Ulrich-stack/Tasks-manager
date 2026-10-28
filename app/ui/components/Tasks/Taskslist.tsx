@@ -1,4 +1,3 @@
-import { EllipsisHorizontalIcon } from "@heroicons/react/24/solid";
 import {
   addDetailsToDb,
   deleteTaskFromDb,
@@ -6,16 +5,14 @@ import {
   fetchTodayTasks,
 } from "../../../lib/script";
 import { ClockIcon, TrashIcon } from "@heroicons/react/24/outline";
-import { hasIcon, iconIndex, stringToColor } from "../../../lib/utils";
-import { categories } from "../../../lib/categories";
+import { stringToColor } from "../../../lib/utils";
 import { useContext, useEffect, useState } from "react";
 import EditTask from "./EditTask";
 import { QueryResultRow } from "@vercel/postgres";
-import { Textarea } from "@mui/joy";
 import dayjs from "dayjs";
 import { useSnackbar } from "./SnackbarContext";
 import { TasksStateContext } from "@/app/lib/hooks/TasksStateContext";
-import Image from "next/image";
+import CategoryBadge from "../CategoryBadge";
 
 function Taskslist({
   tasksList,
@@ -43,66 +40,54 @@ function Taskslist({
   }
 
   return (
-    <div className="w-full flex flex-col gap-y-2 mt-2">
+    <ul className="w-full flex flex-col gap-y-2 mt-3">
       {tasksList.map((task) => {
         const color = stringToColor(task.category);
         return (
-          <div
+          <li
             key={"task " + task.id}
-            className="w-full flex flex-col gap-y-2 bg-white p-2 rounded-md border border-t-4 shadow-md"
-            style={{
-              borderTopColor: color
-            }}
+            className="group relative w-full flex flex-col gap-y-2 bg-white pl-5 pr-2 py-3 rounded-xl border border-slate-200 transition-shadow hover:shadow-md"
           >
-            <div className="w-full flex items-center justify-between">
-              <p className="font-semibold">{task.name}</p>
-              <div className="flex items-center gap-x-1">
-                <TrashIcon
-                  width={"15px"}
-                  className="text-red-500 hover:cursor-pointer"
-                  onClick={(e) => {
+            <span
+              className="absolute left-0 top-3 bottom-3 w-1 rounded-r-full"
+              style={{ backgroundColor: color }}
+              aria-hidden="true"
+            />
+            <div className="w-full flex items-start justify-between gap-x-2">
+              <p className="font-semibold text-slate-900 pt-1">{task.name}</p>
+              <div className="flex items-center shrink-0">
+                <button
+                  type="button"
+                  aria-label={`Delete ${task.name}`}
+                  className="flex items-center justify-center w-9 h-9 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                  onClick={() => {
                     deleteTask(task.id);
-                  dispatch({type: 'DELETE', payload: task.id});
-                  showMessage(<span><strong>{task.name}</strong> successfully deleted.</span>);
-                }}
-                />
-                {/* <EllipsisHorizontalIcon width={"15px"} className="hover:cursor-pointer"/> */}
+                    dispatch({ type: "DELETE", payload: task.id });
+                    showMessage(
+                      <span>
+                        <strong>{task.name}</strong> successfully deleted.
+                      </span>
+                    );
+                  }}
+                >
+                  <TrashIcon className="w-[18px]" aria-hidden="true" />
+                </button>
                 <EditTask task={task} />
               </div>
             </div>
-            <div className="flex items-center rounded text-gray-400 w-fit">
-              <ClockIcon className="w-4 text-gray-500 mr-1" />
-              <span className="text-xs">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span className="inline-flex items-center gap-x-1 text-slate-500 tabular-nums">
+                <ClockIcon className="w-4" aria-hidden="true" />
                 {dayjs(task.hourfrom, "HH:mm A").format("HH:mm") +
-                  " - " +
+                  " – " +
                   dayjs(task.hourto, "HH:mm A").format("HH:mm")}
               </span>
+              <CategoryBadge category={task.category} />
             </div>
-            <div className="flex items-center">
-              <div
-                className="px-1 rounded-md"
-                style={{
-                  color: color,
-                }}
-              >
-                {task.category}
-              </div>
-              {hasIcon(task.category) && (
-                <Image
-                  src={`/icons/${categories[iconIndex(task.category)].icon}`}
-                  alt={`${task.category}-icon`}
-                  className="ml-2"
-                  width={16}
-                  height={16}
-                ></Image>
-              ) }
-            </div>
-          </div>
+          </li>
         );
-      })
-      
-      }
-    </div>
+      })}
+    </ul>
   );
 }
 

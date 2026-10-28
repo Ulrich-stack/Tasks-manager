@@ -11,32 +11,29 @@ import {
 import {
   hasIcon,
   iconIndex,
-  insertAndSortTaskById,
   stringToColor,
+  stringToTint,
 } from "@/app/lib/utils";
 import TaskCard from "@/app/ui/components/Categories/TaskCard";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import Image from "next/image";
 
-import dayjs, { Dayjs } from "dayjs";
 import React, { useEffect, useState } from "react";
-import { number } from "zod";
 import { TrashIcon } from "@heroicons/react/24/outline";
-import { Box, CircularProgress, Tooltip } from "@mui/material";
+import { Tooltip } from "@mui/material";
 import SkeletonLoader from "@/app/ui/components/Categories/TasksSkeleton";
+import PageHeader from "@/app/ui/components/PageHeader";
+import NothingToDo from "@/app/ui/components/Tasks/NothingToDo";
+
+const noDrag = { id: -1, src: "", target: "" };
 
 function Home() {
-  const [today, setToday] = useState<Dayjs | undefined>(dayjs());
   const [categorizedTasks, setCategorizedTasks] = useState<CategorizedTasks[]>(
     []
   );
   const [isLoading, setIsLoading] = useState(false);
-  const [dndItem, setDndItem] = useState({
-    id: -1,
-    src: "",
-    target: "",
-  });
+  const [dndItem, setDndItem] = useState(noDrag);
 
   async function loadTasks() {
     setIsLoading(true);
@@ -65,82 +62,113 @@ function Home() {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <div className="px-20 py-10 w-full h-full">
-        <div className="w-full border-b pb-6">
-          <h1 className="text-2xl font-bold">Categories</h1>
-          <p className="text-gray-600 mt-3">
-            Today, {today?.format("dddd D MMMM YYYY")}
-          </p>
-        </div>
-        <div className="flex flex-col gap-y-4 mt-5 w-full">
+      <div className="px-4 py-6 md:px-10 md:py-10 w-full">
+        <PageHeader
+          title="Categories"
+          subtitle="Drag a task onto another category to move it."
+        />
+        <div className="flex flex-col gap-y-5 mt-8 w-full">
           {isLoading ? (
             <SkeletonLoader categories={categorizedTasks} />
+          ) : !categorizedTasks.length ? (
+            <NothingToDo
+              title="No categories yet"
+              hint="Create a task to start a category."
+            />
           ) : (
             categorizedTasks.map((tasksByCategory, index) => {
               const color = stringToColor(tasksByCategory.category);
+              const isDropTarget =
+                dndItem.id !== -1 &&
+                dndItem.target === tasksByCategory.category &&
+                dndItem.src !== tasksByCategory.category;
               return (
-                <div className="flex flex-col w-full mb-4" key={index}>
+                <section
+                  className={`flex flex-col w-full rounded-2xl border p-4 transition-colors ${
+                    isDropTarget
+                      ? "border-primary bg-primary-soft"
+                      : "border-slate-200 bg-white"
+                  }`}
+                  key={index}
+                  onDragEnter={() => {
+                    setDndItem({
+                      ...dndItem,
+                      target: tasksByCategory.category,
+                    });
+                  }}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    if (dndItem.src !== dndItem.target) {
+                      updateCategory(dndItem.id, dndItem.target);
+                      loadTasks();
+                    }
+                    setDndItem(noDrag);
+                  }}
+                >
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <h2 className="font-bold" style={{ color: color }}>
+                    <div className="flex items-center gap-x-2">
+                      <span
+                        className="flex items-center justify-center w-8 h-8 rounded-lg"
+                        style={{ backgroundColor: stringToTint(tasksByCategory.category) }}
+                        aria-hidden="true"
+                      >
+                        {hasIcon(tasksByCategory.category) ? (
+                          <Image
+                            src={`/icons/${
+                              categories[iconIndex(tasksByCategory.category)].icon
+                            }`}
+                            width={18}
+                            height={18}
+                            alt=""
+                          />
+                        ) : (
+                          <span
+                            className="w-2.5 h-2.5 rounded-full"
+                            style={{ backgroundColor: color }}
+                          />
+                        )}
+                      </span>
+                      <h2 className="font-semibold text-base text-slate-900">
                         {tasksByCategory.category}
                       </h2>
-                      {hasIcon(tasksByCategory.category) && (
-                        <Image
-                          src={`/icons/${
-                            categories[iconIndex(tasksByCategory.category)].icon
-                          }`}
-                          width={18}
-                          height={18}
-                          alt={tasksByCategory.category}
-                          className="ml-2"
-                        />
-                      )}
-                      <div className="ml-2 bg-gray-100 text-gray-500 px-1 rounded-full">{tasksByCategory.tasks.length}</div>
+                      <span className="px-2 rounded-full bg-slate-100 text-xs font-medium text-slate-500 tabular-nums">
+                        {tasksByCategory.tasks.length}
+                      </span>
                     </div>
-                    <div className="">
+                    <Tooltip title="Delete this category and its tasks" placement="top">
                       <button
+                        type="button"
+                        aria-label={`Delete category ${tasksByCategory.category}`}
+                        className="flex items-center justify-center w-9 h-9 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
                         onClick={() =>
                           handleDeleteCategory(tasksByCategory.category, index)
                         }
                       >
-                        <Tooltip title="Delete this category" placement="top">
-                          <TrashIcon className="w-4 text-red-600" />
-                        </Tooltip>
+                        <TrashIcon className="w-[18px]" aria-hidden="true" />
                       </button>
+                    </Tooltip>
+                  </div>
+                  {tasksByCategory.tasks.length ? (
+                    <div className="grid gap-3 mt-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                      {tasksByCategory.tasks.map((task, taskIndex) => {
+                        return (
+                          <TaskCard
+                            key={task + taskIndex}
+                            tasks={task}
+                            color={color}
+                            item={dndItem}
+                            setDndItem={setDndItem}
+                          />
+                        );
+                      })}
                     </div>
-                  </div>
-                  <div
-                    className={`gap-3 mt-2 pt-2 border-t ${tasksByCategory.tasks.length && 'grid grid-cols-4 max-md:grid-cols-2 '}`}
-                    onDragEnter={(e) => {
-                      setDndItem({
-                        ...dndItem,
-                        target: tasksByCategory.category,
-                      });
-                    }}
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={(e) => {
-                      e.preventDefault();
-                      if (dndItem.src !== dndItem.target) {
-
-                        updateCategory(dndItem.id, dndItem.target);
-                        loadTasks();
-                      }
-                    }}
-                  >
-                    {tasksByCategory.tasks.length?  tasksByCategory.tasks.map((task, taskIndex) => {
-                      return (
-                        <TaskCard
-                          key={task + taskIndex}
-                          tasks={task}
-                          color={color}
-                          item={dndItem}
-                          setDndItem={setDndItem}
-                        />
-                      );
-                    }): <div className="h-[80px] w-full flex items-center justify-center text-gray-400">Nothing to do</div>}
-                  </div>
-                </div>
+                  ) : (
+                    <div className="mt-4 h-20 flex items-center justify-center rounded-xl border border-dashed border-slate-300 text-slate-500">
+                      No pending task. Drop one here.
+                    </div>
+                  )}
+                </section>
               );
             })
           )}

@@ -1,13 +1,20 @@
 import React from "react";
+import { ClipboardDocumentCheckIcon } from "@heroicons/react/24/outline";
 
-export default function NothingToDo() {
+export default function NothingToDo({
+  title = "Nothing to do",
+  hint = "Enjoy the free time, or plan something new.",
+}: {
+  title?: string;
+  hint?: string;
+}) {
   return (
-    <div className="flex flex-col items-center justify-center h-1/2">
-      <div className="flex relative">
-        <div className="w-10 h-12 border bg-slate-200 rounded-md"></div>
-        <div className="w-10 h-12 border bg-slate-100 rounded-md absolute z-10 origin-bottom-right animate-rotate rotate-[20deg] drop-shadow "></div>
+    <div className="flex flex-col items-center justify-center text-center py-12 px-4">
+      <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary-soft text-primary">
+        <ClipboardDocumentCheckIcon className="w-6" aria-hidden="true" />
       </div>
-      <div className="mt-2 text-slate-300">Nothing to do</div>
+      <p className="mt-3 font-semibold text-slate-700">{title}</p>
+      <p className="mt-1 text-slate-500">{hint}</p>
     </div>
   );
 }

@@ -16,26 +16,21 @@ export async function createTask(task: Task) {
 }
 
 export const TextfieldStyle = {
-  padding: "1px",
-  borderWidth: "1px",
   "& .MuiInputBase-root": {
-    // cible la racine du Input
-    border: "1px thin #000",
-    borderRadius: "4px",
-    fontSize: "1rem",
-    "&:hover": {
-      borderColor: "black", // Bordure noire au survol
-    },
+    borderRadius: "8px",
+    fontSize: "0.875rem",
+    backgroundColor: "white",
   },
   "& .MuiOutlinedInput-root": {
     "& fieldset": {
-      borderColor: "#c4c4c4", // Modifie la couleur de la bordure par défaut
+      borderColor: "#CBD5E1",
     },
     "&:hover fieldset": {
-      borderColor: "black", // Bordure noire au survol
+      borderColor: "#94A3B8",
     },
     "&.Mui-focused fieldset": {
-      borderColor: "black", // Bordure grise lors de la mise au point
+      borderColor: "#0F766E",
+      borderWidth: "2px",
     },
   },
 };
@@ -47,21 +42,22 @@ export const iconIndex = (category: string | any) =>
 
 export const hasIcon = (item: string | any) => fixedCategories.includes(item);
 
-export function stringToColor(str: string) {
-  // Générer une valeur de hachage à partir de la chaîne de caractères
+function stringToHue(str: string) {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     hash = str.charCodeAt(i) + ((hash << 5) - hash);
   }
+  return Math.abs(hash) % 360;
+}
 
-  // Convertir la valeur de hachage en une couleur hexadécimale
-  let color = "#";
-  for (let i = 0; i < 3; i++) {
-    const value = (hash >> (i * 8)) & 0xff;
-    color += ("00" + value.toString(16)).substr(-2);
-  }
+// Fixed saturation/lightness so every category color stays readable,
+// whatever hue the name hashes to.
+export function stringToColor(str: string) {
+  return `hsl(${stringToHue(str)} 60% 42%)`;
+}
 
-  return color;
+export function stringToTint(str: string) {
+  return `hsl(${stringToHue(str)} 70% 96%)`;
 }
 
 export function insertAndSortTaskById(categorizedTasks: CategorizedTasks[], taskId: number, newCategory: string): CategorizedTasks[] { 

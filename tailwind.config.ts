@@ -8,16 +8,16 @@ const config: Config = {
   ],
   theme: {
     extend: {
-      backgroundImage: {
-        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
-        "gradient-conic":
-          "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
+      fontFamily: {
+        sans: ["var(--font-sans)", "system-ui", "sans-serif"],
       },
-      animation: {
-        'rotate': 'rotateAnimation 2s linear',
-      },
-      transformOrigin: {
-        'bottom-right': 'bottom right',
+      colors: {
+        primary: {
+          DEFAULT: "#0F766E",
+          hover: "#115E59",
+          soft: "#F0FDFA",
+          ring: "#14B8A6",
+        },
       },
     },
   },

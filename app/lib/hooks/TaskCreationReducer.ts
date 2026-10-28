@@ -35,6 +35,7 @@ export function taskCreationReducer(state: any, action: any) {
       return {
         ...initialTaskCreationState,
         isOverlayVisible: state.isOverlayVisible,
+        allCategories: state.allCategories,
       };
     case "SET_ALL_CATEGORIES":
       return { ...state, allCategories: action.payload };

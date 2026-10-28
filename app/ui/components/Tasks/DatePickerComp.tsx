@@ -17,8 +17,8 @@ export default function DatePickerComp({
   name
 }: DatePickerCompProps) {
   return (
-    <div className="flex flex-col gap-y-2 mt-2">
-      <span className="font-semibold ml-1">Date</span>
+    <div className="flex flex-col gap-y-1.5">
+      <span className="font-medium text-slate-700">Date</span>
       <DatePicker
         key={value?.toString() || 'date-picker'}
         name={name}

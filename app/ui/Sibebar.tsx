@@ -7,10 +7,12 @@ import {
   QueueListIcon,
   CheckCircleIcon,
   CalendarIcon,
-  CircleStackIcon,
+  Squares2X2Icon,
+  Bars3Icon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
+import { CheckIcon } from "@heroicons/react/24/solid";
 import { usePathname } from "next/navigation";
-import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/solid";
 
 const NavLinks = [
   {
@@ -21,7 +23,7 @@ const NavLinks = [
   {
     name: "Categories",
     href: "/categories",
-    icon: CircleStackIcon,
+    icon: Squares2X2Icon,
   },
   {
     name: "Completed",
@@ -40,43 +42,56 @@ function Sibebar() {
   const [showSideBar, setShowSideBar] = useState(false);
 
   return (
-    <div className=" md:w-56 bg-white w-full h-full p-4 sticky">
-      <div className="w-full flex justify-between items-center">
-        <h3 className="md:mt-4 font-bold text-xl">ToDo</h3>
-        <Bars3Icon
-          className={`w-5 md:hidden hover:cursor-pointer ${
-            showSideBar && "hidden"
-          }`}
-          onClick={() => setShowSideBar(true)}
-        />
-        {showSideBar && (
-          <XMarkIcon
-            className="w-5 md:hidden hover:cursor-pointer"
-            onClick={() => setShowSideBar(false)}
-          />
-        )}
+    <aside className="md:w-60 md:h-full shrink-0 bg-white border-b md:border-b-0 md:border-r border-slate-200 px-4 py-3 md:py-6">
+      <div className="flex justify-between items-center">
+        <Link href="/" className="flex items-center gap-x-2 rounded-lg">
+          <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary text-white">
+            <CheckIcon className="w-5" aria-hidden="true" />
+          </span>
+          <span className="font-bold text-lg tracking-tight">Tasks</span>
+        </Link>
+        <button
+          type="button"
+          className="md:hidden flex items-center justify-center w-10 h-10 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors"
+          aria-label={showSideBar ? "Close menu" : "Open menu"}
+          aria-expanded={showSideBar}
+          aria-controls="main-nav"
+          onClick={() => setShowSideBar(!showSideBar)}
+        >
+          {showSideBar ? (
+            <XMarkIcon className="w-6" aria-hidden="true" />
+          ) : (
+            <Bars3Icon className="w-6" aria-hidden="true" />
+          )}
+        </button>
       </div>
-      <div
-        className={`md:flex md:flex-col gap-2 mt-3 transition-all duration-500 ease-in-out ${
-          !showSideBar ? "max-md:max-h-0 overflow-hidden" : "max-h-[1000px]"
+      <nav
+        id="main-nav"
+        className={`md:flex md:flex-col gap-1 md:mt-8 transition-all duration-300 ease-out overflow-hidden ${
+          showSideBar ? "max-h-96 mt-3" : "max-md:max-h-0"
         }`}
       >
         {NavLinks.map((NavLink) => {
+          const isActive = NavLink.href === pathname;
           return (
             <Link
               key={NavLink.name}
               href={NavLink.href}
-              className={`text-xs flex w-full p-2 items-center rounded-sm ${
-                NavLink.href === pathname && "bg-[#edeced]"
+              aria-current={isActive ? "page" : undefined}
+              onClick={() => setShowSideBar(false)}
+              className={`flex w-full items-center gap-x-3 px-3 py-2.5 rounded-lg transition-colors ${
+                isActive
+                  ? "bg-primary-soft text-primary font-semibold"
+                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
               }`}
             >
-              <NavLink.icon className="w-4 mr-1" />
-              <p>{NavLink.name}</p>
+              <NavLink.icon className="w-5" aria-hidden="true" />
+              <span>{NavLink.name}</span>
             </Link>
           );
         })}
-      </div>
-    </div>
+      </nav>
+    </aside>
   );
 }
 

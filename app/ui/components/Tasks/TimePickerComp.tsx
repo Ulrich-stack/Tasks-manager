@@ -19,9 +19,9 @@ type PeriodPickerCompProps = {
 
 const PeriodPickerComp: React.FC<PeriodPickerCompProps> = ({ hourFrom, setHourFrom, hourTo, setHourTo, nameFrom, nameTo }) => {
   return (
-    <div className="flex gap-x-2 mt-2">
-    <div className='w-1/2 flex flex-col gap-y-2'>
-      <span className='ml-1 font-semibold'>Start</span>
+    <div className="flex gap-x-3">
+    <div className='w-1/2 flex flex-col gap-y-1.5'>
+      <span className='font-medium text-slate-700'>Start</span>
     <TimePicker
         name={nameFrom}
         label=""
@@ -32,8 +32,8 @@ const PeriodPickerComp: React.FC<PeriodPickerCompProps> = ({ hourFrom, setHourFr
         sx={TextfieldStyle}
       />
     </div>
-    <div className='w-1/2 flex flex-col gap-y-2'>
-    <span className='ml-1 font-semibold'>End</span>
+    <div className='w-1/2 flex flex-col gap-y-1.5'>
+    <span className='font-medium text-slate-700'>End</span>
     <TimePicker
         name={nameTo}
         label=""

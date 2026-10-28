@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import Popover from "@mui/material/Popover";
-import Typography from "@mui/material/Typography";
 import { EllipsisVerticalIcon, PencilIcon } from "@heroicons/react/24/outline";
 import { taskCompleted } from "../../../lib/script";
 import { CheckCircleIcon } from "@heroicons/react/24/solid";
@@ -55,8 +54,15 @@ export default function EditTask({
 
   return (
     <div className="flex items-center">
-      <button onClick={(e) => handleClick(e)}>
-        <EllipsisVerticalIcon className="w-4" />
+      <button
+        type="button"
+        aria-label={`More actions for ${task.name}`}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        className="flex items-center justify-center w-9 h-9 rounded-lg text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+        onClick={(e) => handleClick(e)}
+      >
+        <EllipsisVerticalIcon className="w-5" aria-hidden="true" />
       </button>
       <Popover
         id={id}
@@ -71,31 +77,44 @@ export default function EditTask({
           vertical: "top",
           horizontal: "right",
         }}
+        slotProps={{
+          paper: {
+            sx: {
+              mt: 0.5,
+              borderRadius: "12px",
+              border: "1px solid #E2E8F0",
+              boxShadow: "0 8px 24px rgba(15, 23, 42, 0.08)",
+            },
+          },
+        }}
       >
-        <Typography
-          sx={{ p: 2, display: "flex", flexDirection: "column", gap: 2 }}
-        >
-          <button className="text-xs flex items-center gap-x-2"
-          onClick={e=>{
-            handleOpenModal();
-            setAnchorEl(null);
-          }}
+        <div role="menu" className="flex flex-col p-1 min-w-[160px] text-sm">
+          <button
+            type="button"
+            role="menuitem"
+            className="flex items-center gap-x-2 px-3 py-2 rounded-md text-slate-700 hover:bg-slate-100 transition-colors"
+            onClick={() => {
+              handleOpenModal();
+              setAnchorEl(null);
+            }}
           >
-            <PencilIcon width={"14px"} />
+            <PencilIcon className="w-4" aria-hidden="true" />
             <span>Edit</span>
           </button>
           <button
-            className="text-xs flex items-center gap-x-2"
-            onClick={(e) => {
+            type="button"
+            role="menuitem"
+            className="flex items-center gap-x-2 px-3 py-2 rounded-md text-slate-700 hover:bg-primary-soft hover:text-primary transition-colors"
+            onClick={() => {
               endTask(task.id);
               setAnchorEl(null);
               showMessage(<span><strong>{task.name}</strong> completed!</span>)
             }}
           >
-            <CheckCircleIcon width={"14px"} />
-            <span>Completed</span>
+            <CheckCircleIcon className="w-4" aria-hidden="true" />
+            <span>Mark as completed</span>
           </button>
-        </Typography>
+        </div>
       </Popover>
       <UpdateTask task={task} open={openModal} onClose={handleCloseModal} />
     </div>

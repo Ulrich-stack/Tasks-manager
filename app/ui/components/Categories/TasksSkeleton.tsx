@@ -1,57 +1,39 @@
 import * as React from "react";
 import Skeleton from "@mui/material/Skeleton";
-import Stack from "@mui/material/Stack";
 import { CategorizedTasks } from "@/app/lib/definitions";
-import { stringToColor } from "@/app/lib/utils";
 
 export default function SkeletonLoader({
   categories,
 }: {
   categories: CategorizedTasks[];
 }) {
+  // On first load there are no categories yet: show placeholders anyway.
+  const sections = categories.length
+    ? categories.map((c) => c.category)
+    : ["placeholder-1", "placeholder-2", "placeholder-3"];
+
   return (
     <>
-      {categories.map((categoryTab) => {
-        const color = stringToColor(categoryTab.category);
-
-        return (
-          <div className="flex flex-col w-full mb-4" key={categoryTab.category}>
-            <h2 className="font-bold" style={{ color: color }}>
-              {categoryTab.category}
-            </h2>
-            <div className="mt-4 gap-3 pt-3 border-t flex grid-cols-4">
+      {sections.map((name) => (
+        <div
+          className="flex flex-col w-full rounded-2xl border border-slate-200 bg-white p-4"
+          key={name}
+          aria-hidden="true"
+        >
+          <Skeleton animation="wave" variant="text" width={140} height={32} />
+          <div className="grid gap-3 mt-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {[0, 1, 2].map((i) => (
               <Skeleton
-              animation="wave"
+                key={i}
+                animation="wave"
                 variant="rectangular"
                 height={80}
-                sx={{
-                  borderRadius: "10px",
-                  width: "25%",
-                }}
+                sx={{ borderRadius: "12px" }}
               />
-              <Skeleton
-              animation="wave"
-                variant="rectangular"
-                height={80}
-                sx={{
-                  borderRadius: "10px",
-                  width: "25%",
-                }}
-              />
-              <Skeleton
-              animation="wave"
-
-                variant="rectangular"
-                height={80}
-                sx={{
-                  borderRadius: "10px",
-                  width: "25%",
-                }}
-              />
-            </div>
+            ))}
           </div>
-        );
-      })}
+        </div>
+      ))}
     </>
   );
 }

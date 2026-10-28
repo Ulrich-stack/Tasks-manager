@@ -44,10 +44,13 @@ export const SnackbarProvider = ({ children }: {children: React.ReactNode}) => {
       >
         <Alert 
         sx={{
-            backgroundColor:'white',
-            color:'black',
-            border: '1px thin #ccc', 
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+            backgroundColor: 'white',
+            color: '#0F172A',
+            border: '1px solid #E2E8F0',
+            borderRadius: '12px',
+            boxShadow: '0 8px 24px rgba(15, 23, 42, 0.08)',
+            alignItems: 'center',
+            '& .MuiAlert-icon': { color: '#0F766E' },
         }}
         >{content}</Alert>
       </Snackbar>
